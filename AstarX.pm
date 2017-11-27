@@ -1,5 +1,5 @@
-package AstarX;    # A*: https://en.wikipedia.org/wiki/A*_search_algorithm
-use strict;        # MinPQ: https://algs4.cs.princeton.edu/24pq/
+package Astar; # A*: https://en.wikipedia.org/wiki/A*_search_algorithm
+use strict;    # MinPQ: https://algs4.cs.princeton.edu/24pq/
 
 =pod
 
@@ -19,12 +19,18 @@ use strict;        # MinPQ: https://algs4.cs.princeton.edu/24pq/
    );
 
    # get a list back
-   @path = AstarX::astar(%args);
-   @path = AstarX::astar(\%args); # works with reference to hash too
+   @path = Astar::astar(%args);
+   @path = Astar::astar(\%args); # works with reference to hash too
 
    # get an array reference back, containing the list above
-   $path = AstarX::astar(%args);
-   $path = AstarX::astar(\%args); # works with reference to hash too
+   $path = Astar::astar(%args);
+   $path = Astar::astar(\%args); # works with reference to hash too
+
+=head1 NOTES
+
+The module file is C<AstarX.pm> but the package inside is C<Astar>. It's an
+adaptation of C<Astar.pm> to also include a min priority queue (adapted
+from C<MaxPQ.pm>) for maximum compactness.
 
 =cut
 
