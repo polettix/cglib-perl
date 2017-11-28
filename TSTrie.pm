@@ -50,8 +50,10 @@ sub longest_prefix_of {
 sub _collect {
    my ($self, $prefix) = @_;
    $prefix = '' unless defined $prefix;
-   my $x = (length($prefix) ? $self->_goto_node($prefix, 0) : $self->{root})
-      or return;
+   my $x = length($prefix)
+      ? ($self->_goto_node($prefix, 0) || [])->[MID]
+      : $self->{root};
+   return unless $x;
    my @stack = ([$x, LEFT]);
    my @retval;
    while (@stack) {
