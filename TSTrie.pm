@@ -1,4 +1,6 @@
 package TSTrie;
+use strict;
+
 use constant CHAR   => 0;
 use constant STOP   => 0;
 use constant LEFT   => 1;
@@ -76,19 +78,18 @@ sub _collect {
 
 sub _goto_node {
    my ($self, $key, $create) = @_;
-   die 'invalid' unless defined($k) && (my $l = length $k);
-   my $x = \{$self->{root}};   # reference to node, used for visit
+   die 'invalid key' unless defined($key) && (my $l = length $key);
+   my $x = \($self->{root});   # reference to node, used for visit
    my $d = 0;                  # displacement in the key
    my $c = substr $key, $d, 1; # current char in visit
-   my $C = undef;              # tracks creation of new nodes
    while (($d < $l) && ($create || defined($$x))) {
-      my $n = $$x ||= $C = [$c]; # all other fields are undef by default
+      my $n = $$x ||= [$c]; # all other fields are undef by default
       my $xc = $n->[CHAR];
-      if    ($c lt $xc) { $x = \{$n->[LEFT]} }
-      elsif ($c gt $xc) { $x = \{$n->[RIGHT]} }
-      elsif (++$d < $l) { ($x, $c) = (\{$n->[MID]}, substr($key, $d, 1)) }
+      if    ($c lt $xc) { $x = \($n->[LEFT]) }
+      elsif ($c gt $xc) { $x = \($n->[RIGHT]) }
+      elsif (++$d < $l) { ($x, $c) = (\($n->[MID]), substr($key, $d, 1)) }
    }
-   $self->{n}++ if defined $C; # $C points to latest created node, if any
+   $self->{n}++ if $create && ! defined $$x->[VALUED];
    return $$x;
 }
 
