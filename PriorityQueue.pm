@@ -33,7 +33,7 @@ sub put {    # insert + update in one... DWIM
    return $id;
 } ## end sub put
 
-sub _adjust { # assumption: $k <= $#$is
+sub _adjust {                      # assumption: $k <= $#$is
    my ($is, $before, $self, $k) = (@{$_[0]}{qw< items before >}, @_);
    $k = $self->_swap(int($k / 2), $k)
      while ($k > 1) && $before->($is->[$k], $is->[$k / 2]);
@@ -50,7 +50,7 @@ sub _remove_kth {
    die 'no such item' if (!defined $k) || ($k <= 0) || ($k > $#$is);
    $self->_swap($k, $#$is);
    my $r = CORE::pop @$is;
-   $self->_adjust($k) if $k <= $#$is; # no adjust for last element
+   $self->_adjust($k) if $k <= $#$is;    # no adjust for last element
    my $id = $self->{id_of}->($r);
    delete $self->{$_}{$id} for qw< item_of pos_of >;
    return $r;
