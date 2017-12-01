@@ -1,5 +1,5 @@
-package Astar; # A*: https://en.wikipedia.org/wiki/A*_search_algorithm
-use strict;    # MinPQ: https://algs4.cs.princeton.edu/24pq/
+package Astar;    # A*: https://en.wikipedia.org/wiki/A*_search_algorithm
+use strict;       # MinPQ: https://algs4.cs.princeton.edu/24pq/
 
 =pod
 
@@ -30,7 +30,7 @@ use strict;    # MinPQ: https://algs4.cs.princeton.edu/24pq/
 
 The module file is C<AstarX.pm> but the package inside is C<Astar>. It's an
 adaptation of C<Astar.pm> to also include a min priority queue (adapted
-from C<MaxPQ.pm>) for maximum compactness.
+from C<BasicPriorityQueue.pm>) for maximum compactness.
 
 =cut
 
@@ -48,7 +48,7 @@ sub astar {
    my $queue = bless ['-', {id => $id, f => 0}], __PACKAGE__;
 
    while (!$queue->_is_empty) {
-      my $cid = $queue->_delete_max->{id};
+      my $cid = $queue->_dequeue->{id};
       my $cx  = $node_for{$cid};
       next if $cx->{visited}++;
 
@@ -62,12 +62,33 @@ sub astar {
          my $g = $cx->{g} + $dist->($cv, $sv);
          next if defined($sx->{g}) && ($g >= $sx->{g});
          @{$sx}{qw< p g >} = ($cid, $g);    # p: id of best "previous"
-         $queue->_insert({id => $sid, f => $g + $h->($sv, $goal)});
+         $queue->_enqueue({id => $sid, f => $g + $h->($sv, $goal)});
       } ## end for my $sv ($succs->($cv...))
    } ## end while (!$queue->_is_empty)
 
    return;
 } ## end sub astar
+
+sub _dequeue {                              # includes "sink"
+   my ($k, $self) = (1, @_);
+   my $r = ($#$self > 1) ? (splice @$self, 1, 1, pop @$self) : pop @$self;
+   while ((my $j = $k * 2) <= $#$self) {
+      ++$j if ($j < $#$self) && ($self->[$j + 1]{f} < $self->[$j]{f});
+      last if $self->[$k]{f} < $self->[$j]{f};
+      (@{$self}[$j, $k], $k) = (@{$self}[$k, $j], $j);
+   }
+   return $r;
+} ## end sub _dequeue
+
+sub _enqueue {                              # includes "swim"
+   my ($self, $node) = @_;
+   push @$self, $node;
+   my $k = $#$self;
+   (@{$self}[$k / 2, $k], $k) = (@{$self}[$k, $k / 2], int($k / 2))
+     while ($k > 1) && ($self->[$k]{f} < $self->[$k / 2]{f});
+} ## end sub _enqueue
+
+sub _is_empty { return !$#{$_[0]} }
 
 sub __unroll {    # unroll the path from start to goal
    my ($node, $node_for, @path) = ($_[0], $_[1], $_[0]{value});
@@ -77,26 +98,5 @@ sub __unroll {    # unroll the path from start to goal
    }
    return wantarray ? @path : \@path;
 } ## end sub __unroll
-
-sub _insert {     # includes "swim"
-   my ($self, $node) = @_;
-   push @$self, $node;
-   my $k = $#$self;
-   (@{$self}[$k / 2, $k], $k) = (@{$self}[$k, $k / 2], int($k / 2))
-     while ($k > 1) && ($self->[$k / 2]{f} >= $self->[$k]{f});
-} ## end sub _insert
-
-sub _delete_max {    # includes "sink"
-   my ($k, $self) = (1, @_);
-   my $r = (@$self > 2) ? (splice @$self, 1, 1, pop @$self) : pop @$self;
-   while ((my $j = $k * 2) <= $#$self) {
-      ++$j if ($j < $#$self) && ($self->[$j]{f} >= $self->[$j + 1]{f});
-      last unless ($self->[$k]{f} >= $self->[$j]{f});
-      (@{$self}[$j, $k], $k) = (@{$self}[$k, $j], $j);
-   }
-   return $r;
-} ## end sub _delete_max
-
-sub _is_empty { return !$#{$_[0]} }
 
 1;
