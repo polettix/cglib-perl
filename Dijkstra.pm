@@ -61,8 +61,12 @@ sub dijkstra {
       } ## end for my $vg ($succs->($ug...))
    } ## end while (!$queue->is_empty)
 
-   return bless {t => \%thread_to, id => $id_of, s => $start}, __PACKAGE__;
+   return bless {t => \%thread_to, id => $id_of, s => $start},
+     'Dijkstra::Result';
 } ## end sub dijkstra
+
+package Dijkstra::Result;
+use strict;
 
 sub path_to {
    my ($self, $v) = @_;
