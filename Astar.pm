@@ -2,6 +2,37 @@ package Astar;
 use strict;
 use MaxPQ;
 
+=pod
+
+=head1 SYNOPSIS
+
+   use Astar; # shouldn't need this if you embed
+
+   # Arguments, M for Mandatory, O for Optional
+   my %args = (
+      start      => $node1, # M, node in your graph
+      goal       => $node2, # M, node in your graph
+      distance   => \&dsub, # M, subref, takes 2 nodes, returns number
+      successors => \&ssub, # M, subref, takes 1 node, returns nodes list
+      heuristic  => \&dsub, # O, subref like distance, defaults to distance
+      identifier => \&dsub, # O, subref, takes 1 node, returns id,
+                            #    defaults to stringification of input node
+   );
+
+   # get a list back
+   @path = Astar::astar(%args);
+   @path = Astar::astar(\%args); # works with reference to hash too
+
+   # get an array reference back, containing the list above
+   $path = Astar::astar(%args);
+   $path = Astar::astar(\%args); # works with reference to hash too
+
+=head1 NOTES
+
+This module needs C<BasicPriorityQueue> to work properly.
+
+=cut
+
 sub astar {    # parameters validation
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
    my $start = $args{start}      || die "missing parameter 'start'";
