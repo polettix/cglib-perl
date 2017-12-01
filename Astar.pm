@@ -44,13 +44,13 @@ sub astar {    # parameters validation
 
    my ($id, $gid) = ($id_of->($start), $id_of->($goal));
    my %node_for = ($id => {value => $start, g => 0});
-   my $queue = MaxPQ->new(
-      less_than => sub { $_[0]{f} >= $_[1]{f} },    # need a MinPQ
+   my $queue = BasicPriorityQueue->new(
+      before => sub { $_[0]{f} < $_[1]{f} },    # lower come first
       data => [{id => $id, f => 0}],    # f is invariant for start node
    );
 
    while (!$queue->is_empty) {
-      my $cid = $queue->delete_max->{id};
+      my $cid = $queue->dequeue->{id};
       my $cx  = $node_for{$cid};
       next if $cx->{visited}++;
 
@@ -65,12 +65,12 @@ sub astar {    # parameters validation
          my $g = $cx->{g} + $dist->($cv, $sv);
          next if defined($sx->{g}) && ($g >= $sx->{g});
          @{$sx}{qw< p g >} = ($cid, $g);    # p: id of best "previous"
-         $queue->insert({id => $sid, f => $g + $h->($sv, $goal)});
+         $queue->enqueue({id => $sid, f => $g + $h->($sv, $goal)});
       } ## end for my $sv ($succs->($cv...))
    } ## end while (!$queue->is_empty)
 
    return;
-} ## end sub Astar
+} ## end sub astar
 
 sub __unroll {    # unroll the path from start to goal
    my ($node, $node_for, @path) = ($_[0], $_[1], $_[0]{value});
