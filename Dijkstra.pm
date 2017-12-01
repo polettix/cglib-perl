@@ -20,6 +20,8 @@ use PriorityQueue;
 
    my $obj = Dijkstra::dijkstra(%args) # works with \%args too
 
+   # $obj->isa('Dijkstra::Result') && print "yes it is\n";
+
    my $distance = $obj->distance_to($goal); # number or undef
    my @path = $obj->path_to($goal); # list
    my $path = $obj->path_to($goal); # ref array
