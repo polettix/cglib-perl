@@ -1,12 +1,14 @@
 package Dijkstra;
 use strict;
 use PriorityQueue;
+use Exporter qw< import >;
+our @EXPORT_OK = qw< dijkstra >;
 
 =pod
 
 =head1 SYNOPSIS
 
-   use Dijkstra;
+   use Dijkstra qw< dijkstra >;
 
    # Arguments, M for Mandatory, O for Optional
    my %args = (
@@ -18,7 +20,7 @@ use PriorityQueue;
       goals      => \@aref, # O, list of nodes in your graph, defaults all
    );
 
-   my $obj = Dijkstra::dijkstra(%args) # works with \%args too
+   my $obj = dijkstra(%args) # works with \%args too
 
    # $obj->isa('Dijkstra::Result') && print "yes it is\n";
 
