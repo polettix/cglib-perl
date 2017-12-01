@@ -15,38 +15,38 @@ use PriorityQueue;
    ok $pq->is_empty, 'is_empty - starts empty';
    is $pq->size, 0, 'size - starting size is correct';
 
-   $pq->put(10);
+   $pq->enqueue(10);
    ok !$pq->is_empty, 'is_empty - not empty any more';
    is $pq->size, 1,  'size - one element inside';
    is $pq->top,  10, 'top - element is right';
    is $pq->size, 1,  'size- top did not change anything';
 
-   $pq->put(12);
+   $pq->enqueue(12);
    is $pq->size, 2,  'size - two elements inside';
    is $pq->top,  10, 'top - element is still right';
 
-   $pq->put(9);
+   $pq->enqueue(9);
    is $pq->size, 3, 'size - three elements inside';
    is $pq->top,  9, 'top - element changed, and it is right';
 }
 
 {
    my $pq = PriorityQueue->new;
-   $pq->put($_) for shuffle 1 .. 15;
+   $pq->enqueue($_) for shuffle 1 .. 15;
    is $pq->size, 15, 'added a bunch, in random order';
    my @collected;
-   push @collected, $pq->pop until $pq->is_empty;
+   push @collected, $pq->dequeue until $pq->is_empty;
    is_deeply \@collected, [1 .. 15], 'extraction was in right order';
 }
 
 {
    my $pq = PriorityQueue->new;
-   $pq->put($_) for shuffle 2 .. 15;
-   my $id1 = $pq->put(1);
+   $pq->enqueue($_) for shuffle 2 .. 15;
+   my $id1 = $pq->enqueue(1);
    is $pq->top_id, $id1, 'top_id';
 
-   my $id13 = $pq->put(13);
-   is $pq->size, 15, 'put - present element does not increase size';
+   my $id13 = $pq->enqueue(13);
+   is $pq->size, 15, 'enqueue - present element does not increase size';
    ok $pq->contains_id($id13), 'contains_id - present item';
    is $pq->item_of($id13), 13, 'item_of';
 
@@ -62,7 +62,7 @@ use PriorityQueue;
    ok !$pq->contains_id($id13), 'contains_id - removed item';
 
    my @collected;
-   push @collected, $pq->pop until $pq->is_empty;
+   push @collected, $pq->dequeue until $pq->is_empty;
    is_deeply \@collected, [1 .. 9, 11, 12, 14, 15], 'extraction was fine';
 }
 
@@ -73,7 +73,7 @@ for (1 .. $n_random) {
    last;
 }
 ok !$outcome, "$n_random random tests"
-  or diag "put(@{$outcome->[0]}) remove(@{$outcome->[1]})";
+  or diag "enqueue(@{$outcome->[0]}) remove(@{$outcome->[1]})";
 
 {
    my $pq = PriorityQueue->new(
@@ -91,16 +91,16 @@ ok !$outcome, "$n_random random tests"
    ok $pq->is_empty, 'is_empty - starts empty';
    is $pq->size, 0, 'size - starting size is correct';
 
-   $pq->put($items[0]);
+   $pq->enqueue($items[0]);
    ok !$pq->is_empty, 'is_empty - not empty any more';
    is $pq->size, 1, 'size - one element inside';
    is_deeply $pq->top, $items[0], 'top - element is right';
 
-   $pq->put($items[1]);
+   $pq->enqueue($items[1]);
    is $pq->size, 2, 'size - two elements inside';
    is_deeply $pq->top, {%{$items[0]}}, 'top - element is still right';
 
-   $pq->put($items[2]);
+   $pq->enqueue($items[2]);
    is $pq->size, 3, 'size - three elements inside';
    is_deeply $pq->top, $items[2], 'top - element changed, and it is right';
 }
@@ -111,7 +111,7 @@ sub random_run {
    my $n_removed  = 1 + int(rand($n_elements) / 5);
    my @elements   = 1 .. $n_elements;
    my @shuffled   = shuffle @elements;
-   $pq->put($_) for @shuffled;
+   $pq->enqueue($_) for @shuffled;
    my @removed;
    for (1 .. $n_removed) {
       my $index = int(rand @elements);
@@ -120,7 +120,7 @@ sub random_run {
       $pq->remove($item);
    } ## end for (1 .. $n_removed)
    while (!$pq->is_empty) {
-      my $got = $pq->pop or return [\@shuffled, \@removed];
+      my $got = $pq->dequeue or return [\@shuffled, \@removed];
       my $exp = shift @elements;
       return [\@shuffled, \@removed] unless $got == $exp;
    }

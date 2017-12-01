@@ -6,8 +6,8 @@ sub contains_id { return exists $_[0]{item_of}{$_[1]} }
 sub is_empty    { return !$#{$_[0]{items}} }
 sub item_of { exists($_[0]{item_of}{$_[1]}) ? $_[0]{item_of}{$_[1]} : () }
 sub new;                # see below
-sub pop { return $_[0]->_remove_kth(1) }
-sub put;                # see below
+sub dequeue { return $_[0]->_remove_kth(1) }
+sub enqueue;                # see below
 sub remove    { return $_[0]->remove_id($_[0]{id_of}->($_[1])) }
 sub remove_id { return $_[0]->_remove_kth($_[0]{pos_of}{$_[1]}) }
 sub size      { return $#{$_[0]{items}} }
@@ -21,17 +21,17 @@ sub new {
    $self->{id_of} ||= sub { return ref($_[0]) ? "$_[0]" : $_[0] };
    my $items = $self->{items} || [];
    @{$self}{qw< items pos_of item_of >} = (['-'], {}, {});
-   $self->put($_) for @$items;
+   $self->enqueue($_) for @$items;
    return $self;
 } ## end sub new
 
-sub put {    # insert + update in one... DWIM
+sub enqueue {    # insert + update in one... DWIM
    my ($is, $id) = ($_[0]{items}, $_[0]{id_of}->($_[1]));
    $_[0]{item_of}{$id} = $_[1];    # keep track of this item
    my $k = $_[0]{pos_of}{$id} ||= do { push @$is, $_[1]; $#$is };
    $_[0]->_adjust($k);
    return $id;
-} ## end sub put
+} ## end sub enqueue
 
 sub _adjust {                      # assumption: $k <= $#$is
    my ($is, $before, $self, $k) = (@{$_[0]}{qw< items before >}, @_);
