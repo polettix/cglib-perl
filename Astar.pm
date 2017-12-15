@@ -1,6 +1,6 @@
 package Astar;
 use strict;
-use MaxPQ;
+use BasicPriorityQueue;
 use Exporter qw< import >;
 our @EXPORT_OK = qw< astar >;
 
