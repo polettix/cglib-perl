@@ -70,11 +70,10 @@ sub dijkstra {
       } ## end for my $vg ($succs->($ug...))
    } ## end while (!$queue->is_empty)
 
-   return bless {t => \%thread_to, id => $id_of, s => $start},
-     'Dijkstra::Result';
+   return bless {t => \%thread_to, id => $id_of, s => $start}, 'Dijkstra';
 } ## end sub dijkstra
 
-package Dijkstra::Result;
+package Dijkstra; # repetita juvant... especially with cut-and-paste
 use strict;
 
 sub path_to {
