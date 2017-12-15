@@ -1,5 +1,6 @@
 package TSTrie;
 use strict;
+use Carp qw< croak >;
 
 use constant CHAR   => 0;
 use constant STOP   => 0;
@@ -28,7 +29,7 @@ sub get {
 
 sub longest_prefix_of {
    my ($self, $prefix) = @_;
-   die 'invalid prefix' unless defined $prefix;
+   croak 'invalid prefix' unless defined $prefix;
    my $prefix_length = length($prefix) or return ''; # don't bother...
    my $result_length = 0;
    my $x = $self->{root};
@@ -80,7 +81,7 @@ sub _collect {
 
 sub _goto_node {
    my ($self, $key, $create) = @_;
-   die 'invalid key' unless defined($key) && (my $l = length $key);
+   croak 'invalid key' unless defined($key) && (my $l = length $key);
    my $x = \($self->{root});   # reference to node, used for visit
    my $d = 0;                  # displacement in the key
    my $c = substr $key, $d, 1; # current char in visit

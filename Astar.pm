@@ -1,5 +1,6 @@
 package Astar;
 use strict;
+use Carp qw< croak >;
 use BasicPriorityQueue;
 use Exporter qw< import >;
 our @EXPORT_OK = qw< astar >;
@@ -38,7 +39,7 @@ This module needs C<BasicPriorityQueue> to work properly.
 sub astar {    # parameters validation
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
    my @reqs = qw< start goal distance successors >;
-   exists($args{$_}) || die "missing parameter '$_'" for @reqs;
+   exists($args{$_}) || croak "missing parameter '$_'" for @reqs;
    my ($start, $goal, $dist, $succs) = @args{@reqs};
    my $h     = $args{heuristic}  || $dist;
    my $id_of = $args{identifier} || sub { return "$_[0]" };

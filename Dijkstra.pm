@@ -1,5 +1,6 @@
 package Dijkstra;
 use strict;
+use Carp qw< croak >;
 use PriorityQueue;
 use Exporter qw< import >;
 our @EXPORT_OK = qw< dijkstra >;
@@ -37,14 +38,13 @@ distance. Leverages C<PriorityQueue> for efficiency in node selection.
 
 sub dijkstra {
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
-   my $start = $args{start}      || die "missing parameter 'start'";
-   my $dist  = $args{distance}   || die "missing parameter 'distance'";
-   my $succs = $args{successors} || die "missing parameter 'successors'";
+   my @reqs = qw< start distance successors >;
+   exists($args{$_}) || croak "missing parameter '$_'" for @reqs;
+   my ($start, $dist, $succs) = @args{@reqs};
    my $id_of = $args{identifier} || sub { return "$_[0]" };
-   my $goals = $args{goals};
+   my %is_goal = map { $id_of->($_) => 1 } @{$args{goals} || []};
 
    my $id      = $id_of->($start);
-   my %is_goal = map { $id_of->($_) => 1 } @{$goals || []};
    my $queue   = PriorityQueue->new(
       before => sub { $_[0]{d} < $_[1]{d} },
       id_of  => sub { return $_[0]{id} },

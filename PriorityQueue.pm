@@ -1,6 +1,6 @@
 package PriorityQueue;  # Adapted from https://algs4.cs.princeton.edu/24pq/
 use strict;
-use Carp;
+use Carp qw< croak >;
 
 sub contains    { return $_[0]->contains_id($_[0]{id_of}->($_[1])) }
 sub contains_id { return exists $_[0]{item_of}{$_[1]} }
