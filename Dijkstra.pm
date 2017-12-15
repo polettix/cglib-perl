@@ -87,6 +87,6 @@ sub path_to {
    return wantarray ? @retval : \@retval;
 } ## end sub path_to
 
-sub distance_to { return ($_[0]{t}{$_[0]{id}->($v)} || {})->{d} }
+sub distance_to { return ($_[0]{t}{$_[0]{id}->($_[1])} || {})->{d} }
 
 1;
