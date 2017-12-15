@@ -37,10 +37,9 @@ This module needs C<BasicPriorityQueue> to work properly.
 
 sub astar {    # parameters validation
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
-   my $start = $args{start}      || die "missing parameter 'start'";
-   my $goal  = $args{goal}       || die "missing parameter 'goal'";
-   my $dist  = $args{distance}   || die "missing parameter 'distance'";
-   my $succs = $args{successors} || die "missing parameter 'successors'";
+   my @reqs = qw< start goal distance successors >;
+   exists($args{$_}) || die "missing parameter '$_'" for @reqs;
+   my ($start, $goal, $dist, $succs) = @args{@reqs};
    my $h     = $args{heuristic}  || $dist;
    my $id_of = $args{identifier} || sub { return "$_[0]" };
 
