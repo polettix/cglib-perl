@@ -1,12 +1,14 @@
 package Astar;
 use strict;
 use MaxPQ;
+use Exporter qw< import >;
+our @EXPORT_OK = qw< astar >;
 
 =pod
 
 =head1 SYNOPSIS
 
-   use Astar; # shouldn't need this if you embed
+   use Astar qw< astar >; # shouldn't need this if you embed
 
    # Arguments, M for Mandatory, O for Optional
    my %args = (
@@ -20,12 +22,12 @@ use MaxPQ;
    );
 
    # get a list back
-   @path = Astar::astar(%args);
-   @path = Astar::astar(\%args); # works with reference to hash too
+   @path = astar(%args);
+   @path = astar(\%args); # works with reference to hash too
 
    # get an array reference back, containing the list above
-   $path = Astar::astar(%args);
-   $path = Astar::astar(\%args); # works with reference to hash too
+   $path = astar(%args);
+   $path = astar(\%args); # works with reference to hash too
 
 =head1 NOTES
 

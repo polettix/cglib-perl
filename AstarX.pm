@@ -1,11 +1,13 @@
-package Astar;    # A*: https://en.wikipedia.org/wiki/A*_search_algorithm
-use strict;       # MinPQ: https://algs4.cs.princeton.edu/24pq/
+package AstarX;    # A*: https://en.wikipedia.org/wiki/A*_search_algorithm
+use strict;        # MinPQ: https://algs4.cs.princeton.edu/24pq/
+use Exporter qw< import >;
+our @EXPORT_OK = qw< astar >;
 
 =pod
 
 =head1 SYNOPSIS
 
-   use AstarX; # shouldn't need this if you embed
+   use AstarX qw< astar >; # shouldn't need this if you embed
 
    # Arguments, M for Mandatory, O for Optional
    my %args = (
@@ -19,12 +21,12 @@ use strict;       # MinPQ: https://algs4.cs.princeton.edu/24pq/
    );
 
    # get a list back
-   @path = Astar::astar(%args);
-   @path = Astar::astar(\%args); # works with reference to hash too
+   @path = astar(%args);
+   @path = astar(\%args); # works with reference to hash too
 
    # get an array reference back, containing the list above
-   $path = Astar::astar(%args);
-   $path = Astar::astar(\%args); # works with reference to hash too
+   $path = astar(%args);
+   $path = astar(\%args); # works with reference to hash too
 
 =head1 NOTES
 
