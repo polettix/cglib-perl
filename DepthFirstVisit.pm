@@ -1,10 +1,12 @@
 package DepthFirstVisit;
 use strict;
+use Carp qw< croak >;
 
 sub depth_first_visit {
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
-   my $start = $args{start}      || die "missing parameter 'start'";
-   my $succs = $args{successors} || die "missing parameter 'successors'";
+   my @reqs = qw< start successors >;
+   exists($args{$_}) || croak "missing parameter '$_'" for @reqs;
+   my ($start, $succs) = @args{@reqs};
    my $id_of = $args{identifier} || sub { return "$_[0]" };
    my $pre_action  = $args{pre_action} || undef;
    my $post_action = $args{post_action} || undef;
