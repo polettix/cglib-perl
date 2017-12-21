@@ -8,7 +8,7 @@ sub breadth_first_visit {
       :                                die "missing 'start' or 'starts'";
    my $succs = $args{successors} || die "missing parameter 'successors'";
    my $id_of = $args{identifier} || sub { return "$_[0]" };
-   my $action  = $args{pre_action} || undef;
+   my $action  = $args{action} || undef;
    my %marked;
    my @queue = map { $marked{$id_of->($_)} = 1; [$_, undef] } @starts;
    while (@queue) {

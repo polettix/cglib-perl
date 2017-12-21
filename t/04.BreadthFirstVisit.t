@@ -30,17 +30,17 @@ is_deeply [sort @$reachable], [1..5], 'working with refs';
 
 {
    my @collected;
-   $args{pre_action} = sub { push @collected, $_[0] };
+   $args{action} = sub { push @collected, $_[0] };
    BreadthFirstVisit::breadth_first_visit(\%args);
-   is_deeply \@collected, [1, 2, 3, 4, 5], 'pre_action' or diag "@collected";
+   is_deeply \@collected, [1, 2, 3, 4, 5], 'action' or diag "@collected";
 }
 
 {
    my %pred_of;
-   $args{pre_action} = sub { $pred_of{$_[0]} = $_[1] };
+   $args{action} = sub { $pred_of{$_[0]} = $_[1] };
    BreadthFirstVisit::breadth_first_visit(\%args);
    is_deeply \%pred_of, {1 => undef, 2 => 1, 3 => 1, 4 => 1, 5 => 3},
-      'pre_action, path collection';
+      'action, path collection';
 }
 
 done_testing;
