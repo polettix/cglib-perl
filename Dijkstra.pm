@@ -57,7 +57,7 @@ sub dijkstra {
 
    my %thread_to = ($id => {d => 0, p => undef, pid => $id});
    while (!$queue->is_empty) {
-      my ($ug, $uid, $ud) = @{$queue->pop}{qw< v id d >};
+      my ($ug, $uid, $ud) = @{$queue->dequeue}{qw< v id d >};
       last if $on_goal && $is_goal{$uid} && (!$on_goal->($uid));
       for my $vg ($succs->($ug)) {
          my ($vid, $alt) = ($id_of->($vg), $ud + $dist->($ug, $vg));
@@ -65,7 +65,7 @@ sub dijkstra {
            ? ($alt >= ($thread_to{$vid}{d} //= $alt + 1))
            : exists($thread_to{$vid})
            and next;
-         $queue->put({v => $vg, id => $vid, d => $alt});
+         $queue->enqueue({v => $vg, id => $vid, d => $alt});
          $thread_to{$vid} = {d => $alt, p => $ug, pid => $uid};
       } ## end for my $vg ($succs->($ug...))
    } ## end while (!$queue->is_empty)
@@ -83,7 +83,7 @@ sub path_to {
 
    my @retval;
    while ($v) {
-      push @retval, $v;
+      unshift @retval, $v;
       ($v, $vid) = @{$thr}{qw< p pid >};
       $thr = $self->{t}{$vid};
    }
