@@ -1,6 +1,5 @@
 package PriorityQueue;  # Adapted from https://algs4.cs.princeton.edu/24pq/
 use strict;
-use Carp qw< croak >;
 
 sub contains    { return $_[0]->contains_id($_[0]{id_of}->($_[1])) }
 sub contains_id { return exists $_[0]{item_of}{$_[1]} }
@@ -48,7 +47,7 @@ sub _adjust {                      # assumption: $k <= $#$is
 
 sub _remove_kth {
    my ($is, $self, $k) = ($_[0]{items}, @_);
-   croak 'no such item' if (!defined $k) || ($k <= 0) || ($k > $#$is);
+   die 'no such item' if (!defined $k) || ($k <= 0) || ($k > $#$is);
    $self->_swap($k, $#$is);
    my $r = CORE::pop @$is;
    $self->_adjust($k) if $k <= $#$is;    # no adjust for last element
