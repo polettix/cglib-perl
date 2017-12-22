@@ -1,6 +1,5 @@
 package Astar;
 use strict;
-use BasicPriorityQueue;
 use Exporter qw< import >;
 our @EXPORT_OK = qw< astar >;
 
@@ -45,6 +44,7 @@ sub astar {    # parameters validation
 
    my ($id, $gid) = ($id_of->($start), $id_of->($goal));
    my %node_for = ($id => {value => $start, g => 0});
+   require BasicPriorityQueue;
    my $queue = BasicPriorityQueue->new(
       before => sub { $_[0]{f} < $_[1]{f} },    # lower come first
       data => [{id => $id, f => 0}],    # f is invariant for start node
