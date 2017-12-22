@@ -1,5 +1,7 @@
 package BreadthFirstVisit;
 use strict;
+use Exporter qw< import >;
+our @EXPORT_OK = qw< breadth_first_visit >;
 
 sub breadth_first_visit {
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
