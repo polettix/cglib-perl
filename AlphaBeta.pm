@@ -13,7 +13,6 @@ sub alpha_beta {
    my $a = $args{alpha} // undef;
    my ($bm, $bv, $hm); # "best" stuff, undef treated as +/- inf
    for my $m ($mf->($s)) {
-      #say {*STDERR} ' ' x (@letters - $d), "move <$m>";
       ($hm, my $ns) = (1, $md->($s, $m)); # set "has moved" too
       my ($v, $t) = alpha_beta(
          %args,
