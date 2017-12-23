@@ -1,4 +1,4 @@
-package GCD;
+package Numbers;
 use strict;
 use Exporter qw< import >;
 our @EXPORT_OK = qw< gcd egcd lcm >;
