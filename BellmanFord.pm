@@ -12,7 +12,8 @@ sub bellman_ford {
    while (@q) { # edges in %ed, vertices in %nf
       next if exists $nf{my $vi = $id_of->(my $v = shift @q)};
       for my $w ($scs->($nf{$vi} = $v)) {
-         push @es, [$vi, (my $wi = $id_of->($w)), $dist->($v, $w)];
+         next if $vi eq (my $wi = $id_of->($w)); # avoid self-edges
+         push @es, [$vi, $wi, $dist->($v, $w)];
          push @q, $w unless exists $nf{$wi};
       }
    }
