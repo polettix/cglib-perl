@@ -1,0 +1,388 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+Vector2D - Basic handling of (mostly 2-dimensional) vectors
+
+=head1 SYNOPSIS
+
+   use Vector2D qw< v intersection >; # 2 subs exported
+
+   my $v = v(3, 4);
+   say $v;                 # (3, 4)
+   say $v->length;         # 5
+   say $v->length_2;       # 25 (square of length)
+   $v->scale(2);           # transforms vector
+   say $v;                 # (6, 8)
+   $v->normalize;          # transforms vector
+   say $v;                 # (0.6, 0.8)
+   $v->scale_to(5);        # transform vector, set final length
+   say $v->versor;         # returns a copy
+   say $v->orthogonal;     # (-4, 3) (counter-clockwise)
+   say $v->orthogonal_cw;  # (4, -3) (clockwise)
+   $v->rotate_deg(90);     # transforms vector
+   say $v;                 # (-4, 3) (i.e. counter-clockwise orthogonal)
+
+   my ($v, $w) = (v(3, 4), v(-2, 12));
+   say $v + $w;            # (1, 16)
+   say $v - $w;            # (5, -8)
+   say $v * 2;             # (6, 8)
+   say $v x $w;            # 44 (2D cross-product)
+   say $v * $w;            # 42 (2D dot-product)
+   say $v->angle($w);      # 0.8086... (radians)
+   say $v->angle_deg($w);  # 46.33...  (degrees)
+   say $v->angle_deg($v->orthogonal); # 90
+   say $v == $w ? 'yes' : 'no';       # no
+   say $v == v(3, 4) ? 'yes' : 'no';  # yes
+
+
+=head1 DESCRIPTION
+
+This is a compact library for dealing with (mostly 2-dimensional)
+vectors. It is mostly object-oriented, while providing some facilities
+like operator overloading and two functions. Many methods operate on the
+vector altering it; these methods all have a counterpart method starting
+with C<clone_> that returns a modified copy and leaves the original
+object untouched.
+
+
+=head1 FUNCTIONS
+
+The following functions are available and can be imported where
+indicated.
+
+=head2 C<< ACC >>
+
+   my $accuracy = Vector2D::ACC;
+
+accuracy used for rounding and equality test.
+
+=head2 C<< DEG2RAD >>
+
+   my $scaling_factor = Vector2D::DEG2RAD;
+
+scaling factor for turning degrees into radians.
+
+=head2 C<< intersection >> (importable)
+
+   my $I = intersection($P1, $Pv1, $P2, $Pv2, %opts);
+
+intersection between two segements or the lines they belong to.
+
+The first and third parameters are always points. The second and fourth
+parameter can be either points or relative vectors (applied to the
+respective point) depending on C<$opts{all_points}>.
+
+Returns the point of intersection or nothing if the segments do not
+intersect and C<$opts{strict}> is a Perl-true value (e.g. C<1>).
+
+Example:
+
+   # convention: points uppercase, vectors lowercase
+   my $A = v(0, 1);
+   my $B = v(4, 1);
+   my $C = v(6, 9);
+   my $D = v(2, 9);
+   my $v = v(6, 8);
+   my $w = v(-2, 8);
+
+   my $P = intersection($A, $C, $B, $D, all_points => 1);
+   my $Q = intersection($A, $v, $B, $w); # all_points = 0 by default
+   # both $P and $Q are (3, 5)
+
+   my $nothing = intersection($A, $v *0.1, $B, $w *0.1, strict => 1);
+   # $nothing is undef due to strict
+
+=head2 C<< RAD2DEG >>
+
+   my $scaling_factor = Vector2D::RAD2DEG;
+
+scaling factor for turning radians into degrees.
+
+=head2 C<< v >> (importable)
+
+   my $v = v(3, 4);       # x, y as list
+   my $w = v([2, -12]);   # reference to array
+
+quick wrapper around the L</new> operator, to create a new vector.
+
+=head1 OPERATORS
+
+The following operators are overloaded. All operators leave the original
+object or objects untouched.
+
+=head2 C<< + >>
+
+   my $u = $v + $w;
+
+sum of two vectors.
+
+=head2 C<< - >>
+
+   my $u = $v - $w;
+
+difference of two vectors (subtract C<$w> from C<$v>).
+
+=head2 C<< * >>
+
+   my $u = $v * 2; # vector times scalar
+   $u = 2 * $v;    # scalar times vector
+   $u = $v * $w;   # dot product
+
+depending on operands, either the multiplication by a scalar (on either
+side) or the dot product between two vectors.
+
+=head2 C<< x >>
+
+   my $value = $v x $w;
+
+cross-product of two vectors in 2D, returns a scalar value.
+
+=head2 C<< == >>
+
+   say 'equal' if $v == $w;
+
+boolean comparison of two vectors, for equality. See L</equals> for the
+details.
+
+=head2 C<< "" >>
+
+   say $v;
+
+stringification, returns something of the form C<(x, y)> where C<x> and
+C<y> are the two coordinates, respectively.
+
+=head1 METHODS
+
+=head2 C<< angle >>
+
+   my $rads = $v->angle($w);
+
+angle in radians for rotating from C<$v> to C<$w>, counterclockwise.
+
+=head2 C<< angle_deg >>
+
+   my $degs = $v->angle_deg($w);
+
+angle in degrees for rotating from C<$v> to C<$w>, counterclockwise.
+
+=head2 C<< clone >>
+
+   my $w = $v->clone;
+
+make a copy of the C<$v> vector.
+
+=head2 C<< cross >>
+
+   my $scalar_value = $v->cross($w);
+
+cross-product between C<$v> and C<$w> in 2 dimensions.
+
+=head2 C<< dot >>
+
+   my $scalar_value = $v->dot($w);
+
+dot-product between C<$v> and C<$w>.
+
+=head2 C<< equals >>
+
+   my $boolean = $v->equals($w);
+
+test for equality of vectors. Two vectors are considered equal if the
+square length of their difference vector is less than the accuracy
+L</ACC>.
+
+=head2 C<< intersector >>
+
+   # $A and $B points, $v and $w vectors
+   my $i = ($B - $A)->intersector($v, $w);
+
+find intersection parameters assuming vector C<$v> is applied on point
+C<$A>, vector C<$w> is applied on point C<$B>, and C<< ($B - $A) >> is
+the vector from C<$A> to C<$B>. The returned vector contains scaling
+factors for C<$v> and C<$w> respectively, so that the resulting
+application yields the intersection point:
+
+   my ($alpha, $beta) = @$i;
+   ($A + $v * $alpha) == ($B + $w * $beta) || die "assertion failed!";
+
+If C<$v> and C<$w> are interpreted as segments when applied to the
+respective points, then both C<$alpha> and C<$beta> must be included
+between 0 and 1. This allows for an intersection test between segments.
+
+=head2 C<< length >>
+
+   my $l = $v->length;
+
+length of the vector.
+
+=head2 C<< length_2 >>
+
+   my $l_squared = $v->length_2;
+
+squared length of the vector. Easier to compute with respect to
+L</length> and still useful in comparisons.
+
+=head2 C<< minus >>
+
+=head2 C<< clone_minus >>
+
+   $v->minus($w);
+   my $copy = $v->clone_minus($w);
+   
+subtract one vector from another, in modifying and cloning alternatives.
+
+=head2 C<< new >>
+
+   my $v = Vector2D->new($vx, $vy);
+   my $w = Vector2D->new([$wx, $wy]);
+
+constructor. Why not use function C<v> instead? It's easier to type!
+
+=head2 C<< normalize >>
+
+   $v->normalize;
+
+transform into a versor with same direction and side. Its cloning
+counterpart is L</versor> (i.e. there is no C<clone_normalize>).
+
+=head2 C<< orthogonal >>
+
+   $v->orthogonal;
+
+return a copy of C<$v> rotated by 90 degrees counter-clockwise. The
+rotation is exact and does not rely upon L</rotate>.
+
+=head2 C<< orthogonal_cw >>
+
+   $v->orthogonal_cw;
+
+return a copy of C<$v> rotated by 90 degrees clockwise. The
+rotation is exact and does not rely upon L</rotate>.
+
+=head2 C<< plus >>
+
+=head2 C<< clone_plus >>
+
+   $v->plus($w);
+   my $copy = $v->clone_plus($w);
+   
+sum one vector to another, in modifying and cloning alternatives.
+
+=head2 C<< project >>
+
+=head2 C<< clone_project >>
+
+   $v->project($w);
+   my $copy = $v->clone_project($w);
+
+project a vector onto another. In particular, C<$v> is projected onto
+C<$w>, so the resulting vector is parallel to C<$w>.
+
+=head2 C<< rotate >>
+=head2 C<< clone_rotate >>
+
+   $v->rotate($angle);
+   my $copy = $v->clone_rotate($angle);
+
+rotate a vector by C<$angle> radians.
+
+=head2 C<< rotate_deg >>
+=head2 C<< clone_rotate_deg >>
+
+   $v->rotate_deg($angle);
+   my $copy = $v->clone_rotate_deg($angle);
+
+rotate a vector by C<$angle> degrees.
+
+=head2 C<< round >>
+
+=head2 C<< clone_round >>
+
+   $v->round;
+   my $copy = $v->clone_round;
+
+round every component down to 0 if less than L</ACC>.
+
+=head2 C<< scale >>
+
+=head2 C<< clone_scale >>
+
+   $v->scale(10);
+   my $copy = $v->clone_scale(10);
+
+Multiply each component by a factor.
+
+=head2 C<< scaled_add >>
+
+=head2 C<< clone_scaled_add >>
+
+   $v->scaled_add($w, $factor);
+   my $copy = $v->clone_scaled_add($w, $factor);
+   # last is equivalent to $v + $factor * $w
+
+Sum vector C<$w> scaled by C<$factor>. The latter can be missing,
+defaulting to 1.
+
+=head2 C<< scale_to >>
+
+=head2 C<< clone_scale_to >>
+
+   $v->scale_to(11);
+   my $copy = $v->clone_scale_to(11);
+
+Multiply each component by a factor so that the vector's length (or its
+copy's length) is the provided value.
+
+=head2 C<< stringify >>
+
+   say $v->stringify;
+
+Transform into string version. This is the workhorse behind string
+overloading.
+
+=head2 C<< versor >>
+
+   my $v1 = $v->versor;
+
+Return a versor with same direction and verse as C<$v>. This is the
+cloning counterpart of L</normalize>.
+
+=head2 C<< x >>
+   
+   my $x = $v->x;
+
+Return the component along the X axis.
+
+=head2 C<< y >>
+   
+   my $y = $v->y;
+
+Return the component along the Y axis.
+
+=head1 SEE ALSO
+
+This is only scratching the surface, hopefully in a useful way. For some
+serious Computational Geometry, look at
+L<http://euro.ecom.cmu.edu/shamos.html> and in particular
+L<http://euro.ecom.cmu.edu/people/faculty/mshamos/1978ShamosThesis.pdf>.
+
+
+=head1 AUTHOR
+
+Flavio Poletti <flavio [@t] polettix.it>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2017 by Flavio Poletti <flavio [@t] polettix.it>
+
+This module is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This code is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
