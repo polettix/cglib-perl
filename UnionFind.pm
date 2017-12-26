@@ -1,4 +1,4 @@
-package UnionFind;
+package UnionFind; # Sedgewick & Wayne, Algorithms 4th ed, §1.5
 use strict;
 
 sub add;    # see below
