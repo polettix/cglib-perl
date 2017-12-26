@@ -19,7 +19,7 @@ sub angle_deg        { return $_[0]->angle($_[1]) * RAD2DEG }
 sub clone            { return ref($_[0])->new($_[0]) }
 sub clone_minus      { return $_[0]->clone->minus($_[1]) }
 sub clone_plus       { return $_[0]->clone->plus($_[1]) }
-sub clone_project; # see below
+sub clone_project    { my $v = $_[1]->versor; $v->scale($_[0]->dot($v)) }
 sub clone_rotate     { return $_[0]->clone->rotate($_[1]) }
 sub clone_rotate_deg { return $_[0]->clone->rotate_deg($_[1]) }
 sub clone_round      { return $_[0]->clone->round }
@@ -52,10 +52,6 @@ sub versor    { return $_[0]->clone->normalize }
 sub x         { $_[0][0] = $_[1] if @_ > 1; return $_[0][0] }
 sub y         { $_[0][1] = $_[1] if @_ > 1; return $_[0][1] }
 
-sub clone_project {
-   my $v = $_[1]->versor;
-   return $v->scale($_[0]->dot($v))
-}
 
 sub intersection {
    my ($A, $v, $C, $w, %opts) = @_;
