@@ -12,6 +12,7 @@ sub breadth_first_visit {
    my $id_of = $args{identifier} || sub { return "$_[0]" };
    my $va = $args{action} || $args{visit_action} || undef;
    my $da = $args{discover_action} || undef;
+   my $la = $args{leave_action} || undef;
    my %m; # keep track of marked nodes
    my @q = map {
       $da && $da->($_, undef); $m{$id_of->($_)} = 1; [$_, undef] } @s;
@@ -23,6 +24,7 @@ sub breadth_first_visit {
          $da->($w, $v) if $da;
          push @q, [$w, $v];
       }
+      $la->($v, $pred) if $la;
    }
    return unless defined wantarray; # don't bother with void context
    return keys %m if wantarray;
