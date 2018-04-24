@@ -11,20 +11,20 @@ AlphaBeta - Alpha-Beta Pruning algorithm
    use AlphaBeta qw< alpha_beta >;
 
    # TL;DR - $value is a number, $moves an array of moves
-   my ($value, $moves) = alpha_beta(
-      # alpha => 10, # avoid setting explicitly
-      # beta  => 0,  # avoid setting explicitly
-      depth   => 5,  # how deep can we go?
-      evaluate => sub { my ($state) = @_; ... }, # assign value to $state
-      finished => sub { my ($state) = @_; ... }, # is $state and end?
-      move     => sub { my ($state, $move) = @_; ...}, # do move
-      moves_for => sub { my ($state) = @_; ... }, # what can we do?
-      no_move  => sub { my ($state, $depth) = @_; ... }
-         # no_move: what to return when no move is possible?
-      rollback => sub { my ($state, $move, $up_state) = @_; ... }
-         # rollback: undo a move
-      state    => $whatever_representation_is_meaningful_for_you,
+   my ($value, $moves) = @alpha_beta(
+      alpha => 15,        # O, number, avoid setting it
+      beta  => 3,         # O, number, avoid setting it
+      depth => 5,         # M, non-negative integer
+      evaluate => \&heur, # M, subref, takes state, return number
+      finished => \&fnsh, # M, subref, takes state, return bool
+      move => \&move,     # M, subref, takes state+move, return new state
+      moves_for => \&mvs, # M, subref, takes state, return list of moves
+      no_move => \&nmv,   # O, subref, takes state+depth, return (*)
+      rollback => \&rb,   # O, subref, takes state+depth+updated_state (**)
+      state => $whatever, # M, whatever scalar you find meaningful
    );
+   # (*) no_move returns the same stuff as alpha_beta, context-sensitive
+   # (**) rollback return value is ignored
 
    # a more elaborate example
    my %args = (
