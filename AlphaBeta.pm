@@ -18,6 +18,7 @@ sub alpha_beta {
          alpha => (defined $args{beta} ? -$args{beta} : undef),
          beta  => (defined $av ? -$av : $av),
          depth => ($d - 1),
+         state => $ns,
       );
       $v = -$v;
       $args{rollback}->($s, $m, $ns) if defined $args{rollback};
