@@ -1,0 +1,195 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+AlphaBeta - Alpha-Beta Pruning algorithm
+
+=head1 SYNOPSIS
+
+   use AlphaBeta qw< alpha_beta >;
+
+   my %args = (
+
+      # *** MANDATORY PARAMETERS ***
+      state     => { node => some_tree(), parents => [] },
+
+      moves_for => sub { # return moves possible in $state
+         my ($state) = @_;
+         my $node = $state->{node};
+         return $aref->{children} ? @{$aref->{children}} : ();
+      },
+
+      move      => sub { # apply a $move to the $state
+         my ($state, $move) = @_;
+         push @{$state->{parents}}, $state->{node};
+         $state->{node} = $move;
+         return $state; # updated_state... might be a different beast
+      },
+
+      evaluate  => sub {
+         my ($state) = @_;
+         return $state->{node}{value};
+      },
+
+      depth     => 5, # or whatever depth you are willing to go
+
+      finished  => sub {
+         my ($state) = @_;
+         return $state->{is_terminal_node};
+      }
+
+      # *** OPTIONAL PARAMETERS ***
+      rollback  => sub { # undo a move
+         my ($state, $move, $updated_state) = @_;
+         $state->{node} = pop @{$state->{parents}};
+         return $state;
+      },
+
+      no_move   => 0, # complain loudly if no move can be done
+
+      # *** PARAMETERS YOU SHOULD PROBABLY NOT MESS WITH ***
+      # alpha => 10,
+      # beta  => 12,
+   );
+
+   # if you're only after the best you can obtain use scalar context
+   my $value = alpha_beta(%args);
+
+   # to also get the best move, use list context
+   my ($val, $moves) = alpha_beta(%args);
+
+
+=head1 DESCRIPTION
+
+Implementation of the L<Alpha-Beta
+Pruning|https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning> algorithm.
+There is a single function C<alpha_beta>, which can be invoked in either scalar
+or list context according to the following signatures:
+
+   my ($value, $moves);
+
+   # scalar context variants
+   $value = alpha_beta(%args);   # hash
+   $value = alpha_beta(\%args);  # reference to hash
+
+   # list context variants
+   ($value, $moves) = alpha_beta(%moves);   # hash
+   ($value, $moves) = alpha_beta(\%moves);  # reference to hash
+
+The value associated to the root node is always returned. In list context, you
+also get a list of the moves providing the best strategy.
+
+The input arguments are provided as key/value pairs, the following keys are
+supported:
+
+=over
+
+=item C<alpha>
+
+=item C<beta>
+
+B<OPTIONAL real value>
+
+The boundaries according to the Alpha-Beta pruning algorithm. Assumes infinities
+when not set, which is also the suggested way to call this function externally.
+Bottom line is... don't pass these parameters.
+
+=item C<depth>
+
+B<MANDATORY positive integer value>
+
+How deep to go in the tree when searching.
+
+=item C<evaluate>
+
+B<MANDATORY sub reference>
+
+Heuristic to evaluate the goodness of a position (without further search down). It
+has the following signature and returns a value that is homogeneous with respect
+to L</alpha> and L</beta>.
+
+   sub { my ($state) = @_; ... }
+
+=item C<finished>
+
+B<MANDATORY sub reference>
+
+Boolean function to establish if search in the tree is complete or not, e.g. if
+a winning/losing position is reached. It has the following signature and returns
+a (Perl) boolean value:
+
+   sub { my ($state) = @_; ... }
+
+=item C<move>
+
+B<MANDATORY sub reference>
+
+Function to update a state applying a move. It has the following signature and
+returns the new state.
+
+   sub { my ($state, $move) = @_; ... }
+
+=item C<moves_for>
+
+B<MANDATORY sub reference>
+
+Calculate all possible moves from provided state. It has the following signature
+and returns a list of moves:
+
+   sub { my ($state) = @_; ... }
+
+=item C<no_move>
+
+B<OPTIONAL sub reference>
+
+The result when no move is possible from a given position. If not defined and a
+move is not possible, C<alpha_beta> C<die>s, otherwise it calls this function.
+
+The signature is the following (it is up to the function to figure out the
+right return value/values depending on the calling context):
+
+   sub { my ($state, $depth) = @_; ... }
+
+=item C<rollback>
+
+B<OPTIONAL sub reference>
+
+Roll back a move. It has the following signature:
+
+   sub { my ($state, $move, $updated_state); ... }
+
+You don't necessarily need to define it: if your L</move> sub above returns a
+brand new state and does not modify the provided one, then you are fine. On the
+other hand, if you actually change the C<$state> in L</move>, then you will
+probably want to define this sub to revert the change.
+
+=item C<state>
+
+B<MANDATORY>
+
+The initial state of the search. It is completely opaque to C<alpha_beta>, as
+long of course as the other provided manipulation functions know how to deal
+with it. So yes, it might be a hash reference, an integer value, a URI...
+basically whatever fits in a scalar.
+
+=back
+
+
+=head1 AUTHOR
+
+Flavio Poletti <flavio [@t] polettix.it>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2017 by Flavio Poletti <flavio [@t] polettix.it>
+
+This module is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This code is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
