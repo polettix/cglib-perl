@@ -6,8 +6,8 @@ use constant RAD2DEG => 90 / atan2(1, 0);
 use constant DEG2RAD => atan2(1, 0) / 90;
 use constant ACC => 1e-13;
 use overload
-  '+'        => sub { $_[0]->clone_plus($_[1]) },
-  '-'        => sub { $_[0]->clone_minus($_[1]) },
+  '+'        => sub { $_[0]->clone->plus($_[1]) },
+  '-'        => sub { $_[0]->clone->minus($_[1]) },
   '*'        => \&_mult,
   'x'        => sub { $_[0]->cross($_[1]) },
   '=='       => sub { $_[0]->equals($_[1]) },
@@ -27,6 +27,8 @@ sub clone_scale      { return $_[0]->clone->scale($_[1]) }
 sub clone_scaled_add { return $_[0]->clone->scaled_add(@_[1, 2]) }
 sub clone_scale_to   { return $_[0]->clone->scale_to($_[1]) }
 sub cross            { return $_[0][0] * $_[1][1] - $_[0][1] * $_[1][0] }
+sub distance_from    { return $_[0]->clone->minus($_[1])->length }
+sub distance_2_from  { return $_[0]->clone->minus($_[1])->length_2 }
 sub dot              { return $_[0][0] * $_[1][0] + $_[0][1] * $_[1][1] }
 sub equals { return $_[0]->clone_minus($_[1])->length_2 < ACC ? 1 : 0; }
 sub intersection;    # see below

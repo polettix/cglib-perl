@@ -180,6 +180,20 @@ make a copy of the C<$v> vector.
 
 cross-product between C<$v> and C<$w> in 2 dimensions.
 
+=head2 C<< distance_from >>
+
+   my $scalar_value = $v->distance_from($w);
+
+length of difference between C<$v> and C<$w>.
+
+=head2 C<< distance_from >>
+
+   my $scalar_value = $v->distance_2_from($w);
+
+square of length of difference between C<$v> and C<$w>. This might
+be useful when comparing distances, because it preserves order but
+avoids computing the square root.
+
 =head2 C<< dot >>
 
    my $scalar_value = $v->dot($w);
