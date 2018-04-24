@@ -241,12 +241,9 @@ L</length> and still useful in comparisons.
 
 =head2 C<< minus >>
 
-=head2 C<< clone_minus >>
-
    $v->minus($w);
-   my $copy = $v->clone_minus($w);
-   
-subtract one vector from another, in modifying and cloning alternatives.
+
+subtract one vector from another, alters caller (see L</clone>).
 
 =head2 C<< new >>
 
@@ -278,12 +275,9 @@ rotation is exact and does not rely upon L</rotate>.
 
 =head2 C<< plus >>
 
-=head2 C<< clone_plus >>
-
    $v->plus($w);
-   my $copy = $v->clone_plus($w);
-   
-sum one vector to another, in modifying and cloning alternatives.
+
+sum one vector to another, alters caller (see L</clone>).
 
 =head2 C<< project >>
 
@@ -296,56 +290,39 @@ project a vector onto another. In particular, C<$v> is projected onto
 C<$w>, so the resulting vector is parallel to C<$w>.
 
 =head2 C<< rotate >>
-=head2 C<< clone_rotate >>
 
    $v->rotate($angle);
-   my $copy = $v->clone_rotate($angle);
 
 rotate a vector by C<$angle> radians.
 
 =head2 C<< rotate_deg >>
-=head2 C<< clone_rotate_deg >>
 
    $v->rotate_deg($angle);
-   my $copy = $v->clone_rotate_deg($angle);
 
 rotate a vector by C<$angle> degrees.
 
 =head2 C<< round >>
 
-=head2 C<< clone_round >>
-
    $v->round;
-   my $copy = $v->clone_round;
 
 round every component down to 0 if less than L</ACC>.
 
 =head2 C<< scale >>
 
-=head2 C<< clone_scale >>
-
    $v->scale(10);
-   my $copy = $v->clone_scale(10);
 
 Multiply each component by a factor.
 
 =head2 C<< scaled_add >>
 
-=head2 C<< clone_scaled_add >>
-
    $v->scaled_add($w, $factor);
-   my $copy = $v->clone_scaled_add($w, $factor);
-   # last is equivalent to $v + $factor * $w
 
 Sum vector C<$w> scaled by C<$factor>. The latter can be missing,
 defaulting to 1.
 
 =head2 C<< scale_to >>
 
-=head2 C<< clone_scale_to >>
-
    $v->scale_to(11);
-   my $copy = $v->clone_scale_to(11);
 
 Multiply each component by a factor so that the vector's length (or its
 copy's length) is the provided value.
@@ -365,13 +342,13 @@ Return a versor with same direction and verse as C<$v>. This is the
 cloning counterpart of L</normalize>.
 
 =head2 C<< x >>
-   
+
    my $x = $v->x;
 
 Return the component along the X axis.
 
 =head2 C<< y >>
-   
+
    my $y = $v->y;
 
 Return the component along the Y axis.

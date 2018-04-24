@@ -17,20 +17,12 @@ use overload
 sub angle { return atan2($_[0]->cross($_[1]), $_[0]->dot($_[1])) }
 sub angle_deg        { return $_[0]->angle($_[1]) * RAD2DEG }
 sub clone            { return ref($_[0])->new($_[0]) }
-sub clone_minus      { return $_[0]->clone->minus($_[1]) }
-sub clone_plus       { return $_[0]->clone->plus($_[1]) }
 sub clone_project    { my $v = $_[1]->versor; $v->scale($_[0]->dot($v)) }
-sub clone_rotate     { return $_[0]->clone->rotate($_[1]) }
-sub clone_rotate_deg { return $_[0]->clone->rotate_deg($_[1]) }
-sub clone_round      { return $_[0]->clone->round }
-sub clone_scale      { return $_[0]->clone->scale($_[1]) }
-sub clone_scaled_add { return $_[0]->clone->scaled_add(@_[1, 2]) }
-sub clone_scale_to   { return $_[0]->clone->scale_to($_[1]) }
 sub cross            { return $_[0][0] * $_[1][1] - $_[0][1] * $_[1][0] }
 sub distance_from    { return $_[0]->clone->minus($_[1])->length }
 sub distance_2_from  { return $_[0]->clone->minus($_[1])->length_2 }
 sub dot              { return $_[0][0] * $_[1][0] + $_[0][1] * $_[1][1] }
-sub equals { return $_[0]->clone_minus($_[1])->length_2 < ACC ? 1 : 0; }
+sub equals { return $_[0]->clone->minus($_[1])->length_2 < ACC ? 1 : 0; }
 sub intersection;    # see below
 sub intersector;     # see below
 sub length   { return sqrt($_[0]->length_2) }
@@ -58,14 +50,14 @@ sub y         { $_[0][1] = $_[1] if @_ > 1; return $_[0][1] }
 sub intersection {
    my ($A, $v, $C, $w, %opts) = @_;
    if ($opts{all_points}) {    # make sure $v and $w are relative vectors
-      $v = $v->clone_minus($A);
-      $w = $w->clone_minus($C);
+      $v = $v->clone->minus($A);
+      $w = $w->clone->minus($C);
    }
-   my ($alpha, $beta) = @{$C->clone_minus($A)->intersector($v, $w)};
+   my ($alpha, $beta) = @{$C->clone->minus($A)->intersector($v, $w)};
    return
      if $opts{strict}
      && !((0 <= $alpha) && ($alpha <= 1) && (0 <= $beta) && ($beta <= 1));
-   return $A->clone_scaled_add($v, $alpha);
+   return $A->clone->scaled_add($v, $alpha);
 } ## end sub intersection
 
 # intersection parameters between segments AB and CD, with AB = $v,
@@ -76,7 +68,7 @@ sub intersector {
    return v($_[0]->cross($_[2]) / $den, $_[0]->cross($_[1]) / $den);
 }
 
-sub _mult { ref($_[1]) ? $_[0]->dot($_[1]) : $_[0]->clone_scale($_[1]) }
+sub _mult { ref($_[1]) ? $_[0]->dot($_[1]) : $_[0]->clone->scale($_[1]) }
 
 sub rotate {
    my ($x, $y, $c, $s) = ($_[0][0], $_[0][1], cos($_[1]), sin($_[1]));
