@@ -11,6 +11,7 @@ sub depth_first_visit {
    my $id_of = $args{identifier} || sub { return "$_[0]" };
    my $pre_action  = $args{pre_action} || undef;
    my $post_action = $args{post_action} || undef;
+   my $skip_action = $args{skip_action} || undef;
    my %adjacents = ($id_of->($start) => [$succs->($start)]);
    my @stack = ([$start, undef]);
    $pre_action->($start, undef) if $pre_action;
@@ -20,10 +21,14 @@ sub depth_first_visit {
       if (@{$adjacents{$vid}}) {
          my $w = shift @{$adjacents{$vid}};
          my $wid = $id_of->($w);
-         next if exists $adjacents{$wid}; # already visited
-         $adjacents{$wid} = [$succs->($w)];
-         push @stack, [$w, $v];
-         $pre_action->($w, $v) if $pre_action;
+         if (exists $adjacents{$wid}) { # already visited
+            $skip_action->($w, $v) if $skip_action;
+         }
+         else {                         # new node to be visited
+            $adjacents{$wid} = [$succs->($w)];
+            push @stack, [$w, $v];
+            $pre_action->($w, $v) if $pre_action;
+         }
       }
       else {
          $post_action->($v, $pred) if $post_action;
