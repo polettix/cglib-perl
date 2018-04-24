@@ -18,4 +18,24 @@ follows the following guidelines:
 - use `Exporter` - its presence does not get in the way of easy
   copy-pasting anyway
 
+A lot of the code would not be here were it not for the excellent courses
+on Algorithms by Robert Sedgewick and Kevin Wayne as found on Coursera.
+Their [mini-site][algs4] about the book is invaluable.
+
+Copyright (C) 2018 by Flavio Poletti.
+
+This code is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This program is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+As an extension, I will not take offense if you just copy-paste the
+parts you need when solving puzzles in [CodingGame][CG]. I would be
+happy to receive updates if you find bugs or do useful additions, just
+use [the GitHub repository][cglib-perl].
+
 [CG]: https://www.codingame.com/
+[algs4]: https://algs4.cs.princeton.edu/code/
+[cglib-perl]: https://github.com/polettix/cglib-perl
