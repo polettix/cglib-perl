@@ -1,6 +1,7 @@
 package Vector2D;
 use strict;
 use Exporter qw< import >;
+use POSIX ();
 our @EXPORT_OK = qw< v intersection >;
 use constant RAD2DEG => 90 / atan2(1, 0);
 use constant DEG2RAD => atan2(1, 0) / 90;
@@ -15,24 +16,26 @@ use overload
   'fallback' => undef;
 
 sub angle { return atan2($_[0]->cross($_[1]), $_[0]->dot($_[1])) }
-sub angle_deg        { return $_[0]->angle($_[1]) * RAD2DEG }
-sub clone            { return ref($_[0])->new($_[0]) }
-sub clone_project    { my $v = $_[1]->versor; $v->scale($_[0]->dot($v)) }
-sub cross            { return $_[0][0] * $_[1][1] - $_[0][1] * $_[1][0] }
-sub distance_from    { return $_[0]->clone->minus($_[1])->length }
-sub distance_2_from  { return $_[0]->clone->minus($_[1])->length_2 }
-sub dot              { return $_[0][0] * $_[1][0] + $_[0][1] * $_[1][1] }
+sub angle_deg       { return $_[0]->angle($_[1]) * RAD2DEG }
+sub clone           { return ref($_[0])->new($_[0]) }
+sub clone_project   { my $v = $_[1]->versor; $v->scale($_[0]->dot($v)) }
+sub cross           { return $_[0][0] * $_[1][1] - $_[0][1] * $_[1][0] }
+sub distance_from   { return $_[0]->clone->minus($_[1])->length }
+sub distance_2_from { return $_[0]->clone->minus($_[1])->length_2 }
+sub dot             { return $_[0][0] * $_[1][0] + $_[0][1] * $_[1][1] }
 sub equals { return $_[0]->clone->minus($_[1])->length_2 < ACC ? 1 : 0; }
 sub intersection;    # see below
 sub intersector;     # see below
+sub invert { $_ = -$_ for @{$_[0]}; return $_[0] }
 sub length   { return sqrt($_[0]->length_2) }
 sub length_2 { return $_[0]->dot($_[0]) }
 sub minus    { return $_[0]->scaled_add($_[1], -1) }
 sub new      { return bless [ref($_[1]) ? @{$_[1]} : @_[1 .. $#_]], $_[0] }
-sub normalize     { return $_[0]->scale(1 / $_[0]->length) }
+sub normalize { return $_[0]->scale(1 / $_[0]->length) }
+sub on_grid { $_ = int POSIX::floor($_ + 0.5) for @{$_[0]}; return $_[0] }
 sub orthogonal    { return v(-$_[0][1], $_[0][0]) }
-sub orthogonal_cw { return v($_[0][1], -$_[0][0]) }
-sub plus          { return $_[0]->scaled_add($_[1], 1) }
+sub orthogonal_cw { return v($_[0][1],  -$_[0][0]) }
+sub plus { return $_[0]->scaled_add($_[1], 1) }
 sub project { @{$_[0]} = @{$_[0]->clone_project($_[1])}; return $_[0] }
 sub rotate;          # see below
 sub rotate_deg { return $_[0]->rotate($_[1] * DEG2RAD) }
@@ -45,7 +48,6 @@ sub v         { return __PACKAGE__->new(@_) }
 sub versor    { return $_[0]->clone->normalize }
 sub x         { $_[0][0] = $_[1] if @_ > 1; return $_[0][0] }
 sub y         { $_[0][1] = $_[1] if @_ > 1; return $_[0][1] }
-
 
 sub intersection {
    my ($A, $v, $C, $w, %opts) = @_;

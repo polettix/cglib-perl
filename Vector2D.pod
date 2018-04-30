@@ -226,6 +226,12 @@ If C<$v> and C<$w> are interpreted as segments when applied to the
 respective points, then both C<$alpha> and C<$beta> must be included
 between 0 and 1. This allows for an intersection test between segments.
 
+=head2 C<< invert >>
+
+   $v->invert;
+
+invert a vector, negating each component. Returns the vector C<$v>.
+
 =head2 C<< length >>
 
    my $l = $v->length;
@@ -258,6 +264,13 @@ constructor. Why not use function C<v> instead? It's easier to type!
 
 transform into a versor with same direction and side. Its cloning
 counterpart is L</versor> (i.e. there is no C<clone_normalize>).
+
+=head2 C<< on_grid >>
+
+   $v->on_grid;
+
+rounds every component to the closest integer, putting the vector on
+an I<integer grid>. Returns C<$v>.
 
 =head2 C<< orthogonal >>
 
