@@ -19,4 +19,3 @@ sub stringify {
    } 0 .. $r - 1;
    return '|' . $inner . '|';
 } ## end sub stringify
-
