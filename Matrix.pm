@@ -4,25 +4,19 @@ use Exporter qw< import >;
 our @EXPORT_OK = qw< M >;
 use overload '""' => \&stringify;
 
-sub clone { return M(@{$_[0]}{qw< r c d >}) }
-sub idx   { return $_[0]{c} * $_[1] + $_[2] }
-sub M     { return __PACKAGE__->new(@_) }
-sub new;          # see below
+sub clone { return bless [@{$_[0]}], __PACKAGE__ }
+sub idx   { return $_[0][-1] * $_[1] + $_[2] }
+sub Mify  { return bless $_[0], __PACKAGE__ }
+sub M     { return Mify([ref($_[0]) ? @{$_[0]} : @_]) }
 sub stringify;    # see below
-sub v { return $_[0]{d}[$_[0]{c} * $_[1] + $_[2]] }
-sub V { return $_[0]{d}[$_[0]{c} * $_[1] + $_[2]] = $_[3] }
-
-sub new {
-   my ($p, $r, $c, $d) = @_;
-   return bless {r => $r, c => $c, d => [$d ? @$d : (0) x ($r * $c)]}, $p;
-}
+sub v { my $i = idx(@_); @_ > 3 ? ($_[0][$i] = $_[3]) : $_[0][$i] }
 
 sub stringify {
-   my ($s) = @_;
-   my $inner = join " |\n| ", map {
-      join '  ',
-        map { sprintf '%2s', $_ }
-        @{$s->{d}}[$_ * $s->{c} .. ($_ + 1) * $s->{c} - 1]
-   } 0 .. $s->{r} - 1;
-   return '| ' . $inner . ' |';
+   my ($s, $c, $r) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1]);
+   my $l = (sort {$a <=> $b} map { length } @{$s}[0 .. $#$s - 1])[-1];
+   my $inner = join "|\n|", map { join ' ',
+        map { sprintf " %${l}s ", $_ } @{$s}[$_ * $c .. ($_ + 1) * $c - 1]
+   } 0 .. $r - 1;
+   return '|' . $inner . '|';
 } ## end sub stringify
+

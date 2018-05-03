@@ -4,9 +4,10 @@ use Exporter qw< import >;
 our @EXPORT_OK = qw< bareiss >;
 
 sub bareiss {    # transforms matrix in-place, hopefully
-   my ($A, $B, $n, $m) = ($_[0], [@{$_[0]}], $_[0][-1], $#{$_[0]} / $_[0][-1]);
-   ($A, $B) = ($B, $A) unless $n & 1;    # $n & 1 same as $n % 2
+   my ($A, $B, $m, $n) = ($_[0], [@{$_[0]}], $_[0][-1], $#{$_[0]} / $_[0][-1]);
+   ($A, $B) = ($B, $A) if (($n & 1) xor (int(($n - 1) / 2) & 2));
    for (my $k = 1; $k <= $n - 1; $k += 2) {
+      ($A, $B) = ($B, $A);
       my $K = ($k - 1) * $m + $k - 1;    # upper-left corner
       if ($k < $n - 1) {
          my $c0 =
