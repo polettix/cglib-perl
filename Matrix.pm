@@ -11,7 +11,7 @@ sub column_echelon; # see below
 sub I; # see below
 sub kernel; # see below
 sub idx { return $_[0][-1] * $_[1] + $_[2] }
-sub M { return Mify([ref($_[0]) ? @{$_[0]} : @_]) }
+sub M { return bless [ref($_[0]) ? @{$_[0]} : @_], __PACKAGE__ }
 sub Mify { return bless $_[0], __PACKAGE__ }
 sub O { return M((0) x ($_[0] * $_[1] || $_[0]), $_[1] || $_[0]) }
 sub n_columns { return $_[0][-1] }
@@ -30,23 +30,35 @@ sub append_below {
 }
 
 sub column_echelon {
-   my ($s, $c, $r, $t) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1], $#{$_[0]});
-   for my $k (0 .. ($c < $r ? $c : $r) - 2) {
-      my ($K, $j) = ($k * $c + $k, $k);
-      $s->[$k * $c + $j] && $s->swap_columns($k, $j)
-         while (!$s->[$K]) && (++$j < $c);
-      my $akk = $s->[$K] or next;
+   my ($s, $c, $r, @sws) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1]);
+   my ($n, $t) = (defined($_[1]) ? $_[1] : $c < $r ? $c : $r, $r * $c);
+ LOOP:
+   for my $k (0 .. $n - 1) {
+      my $K = $k * $c + $k;
+      if (!$s->[$K]) {
+       SEARCH_PIVOT:
+         for my $i ($k .. $n - 1) {
+            for my $j ($k .. $c - 1) {
+               next unless $s->[$i * $c + $j];
+               $s->swap_rows($k, $i) && unshift @sws, [$k, $i] if $k != $i;
+               $s->swap_columns($k, $j) if $k != $j;
+               last SEARCH_PIVOT;
+            }
+         }
+      }
+      my $akk = $s->[$K] or last LOOP;    # rest is all zeros
       for my $j ($k + 1 .. $c - 1) {
          my $akj = $s->[$k * $c + $j] or next;
          my $g = _gcd($akk, $akj);
-         my ($Akk, $Akj) = ($g > 1) ? ($akk / $g, $akj / $g) : ($akk, $akj);
+         my ($kk, $kj) = ($g > 1) ? ($akk / $g, $akj / $g) : ($akk, $akj);
          for (my $I = $k * $c; $I + $j < $t; $I += $c) {
-            $s->[$I + $j] = $s->[$I + $j] * $Akk - $s->[$I + $k] * $Akj;
+            $s->[$I + $j] = $s->[$I + $j] * $kk - $s->[$I + $k] * $kj;
          }
-      }
-   }
+      } ## end for my $j ($k + 1 .. $c...)
+   } ## end LOOP: for my $k (0 .. ($c < $r...))
+   $s->swap_rows(@$_) for @sws;
    return $s;
-}
+} ## end sub column_echelon
 
 sub I {
    my ($n, $n2, $i) = ($_[0], $_[0] * $_[0], 0);
@@ -56,15 +68,16 @@ sub I {
 }
 
 sub kernel {
-   my ($M, $c, $r) = ($_[0]->clone, $_[0][-1], $#{$_[0]} / $_[0][-1]);
-   $M->append_below(O($c - $r, $c)) if $r < $c;
-   $M->append_below(I($c))->column_echelon;
-   my $k = $c - 1;
+   my ($s, $c, $r) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1]);
+   my $M = $s->clone->append_below(I($c))->column_echelon($r);
+   my $k = ($r < $c ? $r : $c) - 1;
    $k-- while ($k >= 0) && ($M->[$k * $c + $k] == 0);
    my @retval;
+ CANDIDATE:
    for my $j (++$k .. $c - 1) {
+      $M->[$_ * $c + $j] && next CANDIDATE for $j .. $r - 1;
       my ($gcd, $has_positive, @v) = (0);
-      for my $i ($c .. $c + $c - 1) {
+      for my $i ($r .. $r + $c - 1) {
          push @v, my $v = $M->[$i * $c + $j];
          $gcd = _gcd($gcd, $v);
          $has_positive ||= $v > 0;
@@ -72,29 +85,40 @@ sub kernel {
       $gcd = -$gcd if ($gcd < 0) && $has_positive;
       $gcd and $_ /= $gcd for @v;
       push @retval, \@v;
-   }
+   } ## end CANDIDATE: for my $j (++$k .. $c -...)
    return \@retval;
-}
+} ## end sub kernel
 
 sub row_echelon {
-   my ($s, $c, $r, $t) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1], $#{$_[0]});
-   for my $k (0 .. ($c < $r ? $c : $r) - 2) {
-      my ($K, $i) = ($k * $c + $k, $k);
-      $s->[$i * $c + $k] && $s->swap_rows($k, $i)
-         while (!$s->[$K]) && (++$i < $r);
-      my $akk = $s->[$K] or next;
-      for my $i ($k + 1 .. $r - 1) {
-         my $I = $c * $i;
-         my $aik = $s->[$I + $k] or next;
-         my $g = _gcd($akk, $aik);
-         my ($Akk, $Aik) = ($g > 1) ? ($akk / $g, $aik / $g) : ($akk, $aik);
-         for my $j ($k .. $c - 1) {
-            $s->[$I + $j] = $s->[$I + $j] * $Akk - $s->[$k * $c + $j] * $Aik;
+   my ($s, $c, $r, @w) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1]);
+   my ($n, $t) = (defined($_[1]) ? $_[1] : $c < $r ? $c : $r, $r * $c);
+ LOOP:
+   for my $k (0 .. $n - 1) {
+      my $K = $k * $c + $k;
+      if (!$s->[$K]) {
+       SEARCH_PIVOT:
+         for my $j ($k .. $n - 1) {
+            for my $i ($k .. $r - 1) {
+               next unless $s->[$i * $c + $j];
+               $s->swap_columns($k, $j) && unshift @w, [$k, $j] if $k < $j;
+               $s->swap_rows($k, $i) if $k != $i;
+               last SEARCH_PIVOT;
+            }
          }
       }
-   }
+      my $akk = $s->[$K] or last LOOP;    # rest is all zeros
+      for (my $I = (my $K = $k * $c) + $c; $I <= $t - $c; $I += $c) {
+         my $aik = $s->[$I + $k] or next;
+         my $g = _gcd($akk, $aik);
+         my ($kk, $ik) = ($g > 1) ? ($akk / $g, $aik / $g) : ($akk, $aik);
+         for (my $j = $k; $j < $c; $j++) {
+            $s->[$I + $j] = $s->[$I + $j] * $kk - $ik * $s->[$K + $j];
+         }
+      } ## end for my $j ($k + 1 .. $c...)
+   } ## end LOOP: for my $k (0 .. ($c < $r...))
+   $s->swap_columns(@$_) for @w;
    return $s;
-}
+} ## end sub column_echelon
 
 sub stringify {
    my ($s, $c, $r) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1]);
@@ -114,6 +138,7 @@ sub swap_columns {
 sub swap_rows {
    my ($s, $c, $r) = ($_[0], $_[0][-1], $#{$_[0]} / $_[0][-1]);
    my ($F, $T) = ($_[1] * $c, $_[2] * $c);
+   return $s if $F == $T;
    @{$s}[$F + $_, $T + $_] = @{$s}[$T + $_, $F + $_] for 0 .. $c - 1;
    return $s;
 }
