@@ -30,15 +30,27 @@ END
 
 package Base;
 use strict;
-use Storable 'dclone';
+use Storable ();
 use EMo 'default';
 use experimental qw< signatures postderef >;
 no warnings qw< experimental::signatures experimental::postderef >;
 
 has fh        => (default => $SHARED_FH);
 has log_types => (default => $SHARED_LOG_TYPES);
+has hash_remove => (default => [qw< fh log_types hash_remove >]);
 
-sub clone ($s) { (ref($s) || $s)->new(Storable::dclone({$s->%*})->%*) }
+sub clone ($src) {
+   my $dest = ref($src)->new($src->hashref->%*);
+   $dest->$_($src->$_) for $src->hash_remove->@*;
+   return $dest;
+}
+
+sub hashref ($self)  {
+   my %hash = $self->%*;
+   delete @hash{$self->hash_remove->@*};
+   return Storable::dclone(\%hash);
+}
+
 sub log_die { $_[0]->log(@_); die "bailing out\n" }
 sub log_set { %{$_[0]{log_types}} = (%{$_[0]{log_types}}, @_); $_[0] }
 
@@ -62,13 +74,22 @@ sub log ($self, $type, @items) {
 }
 
 sub readline ($self) {
-   defined(my $line = CORE::readline($_[0]->fh)) or return;
+   defined(my $line = CORE::readline($self->fh)) or return;
    $self->log(read => $line);
    return $line;
 }
 
 sub readchomplines ($self, $n) {
    return [map {chomp(my $l = $self->readline); $l} 1 .. $n];
+}
+
+sub set_input ($self, $input) {
+   return unless defined $input;
+   $self->fh(
+      (ref($input) eq 'GLOB') ? $input
+      : do { open my $fh, '<', $input or die "open(): $!"; $fh }
+   );
+   return $self;
 }
 
 package Bot;
@@ -117,23 +138,22 @@ sub run {
 package MyRound;
 use strict;
 use warnings;
-use EMo 'default'; # build default builder coerce is required option chain
+use EMo ''; # build default builder coerce is required option chain
 use experimental qw< signatures postderef >;
 no warnings qw< experimental::signatures experimental::postderef >;
 
-extends 'Base'; # gets logging & reading capabilities
+extends 'Base'; # logging, reading
 
 has $_ for qw< foo bar >; # your round members
 
-# EXAMPLE round parsing skeleton here. $bot allows getting Bot-related
-# member variables, if necessary
-sub read_new ($package, $bot = undef) {
+# EXAMPLE round reading
+sub read ($package, $n1, $n2) { # FIXME
    my $self = (ref($package) || $package)->new; # default log & read
 
    my $n = 0 + $self->readline;
-   $self->parse_foo($self->readchomplines($n));
-   $self->parse_bar($self->readchomplines($n));
-   # ... and so on
+   $self->parse_foo($self->readchomplines($n1 + $n));
+   $self->parse_bar($self->readchomplines($n2));
+   # ...
 
    return $self;
 }
@@ -141,31 +161,34 @@ sub read_new ($package, $bot = undef) {
 package MyBot;
 use strict;
 use warnings;
-use EMo 'default'; # build default builder coerce is required option chain
+use EMo ''; # build default builder coerce is required option chain
 use experimental qw< signatures postderef >;
 no warnings qw< experimental::signatures experimental::postderef >;
 
 extends 'Bot';
 
-has $_ for qw< round >;
+has $_ for qw< round n1 n2 >;
 
-sub parse_intro ($self) { # $self->readline or $self->readchomplines
+sub parse_intro ($self) {
+   $self->n1(0 + $self->readline); # example FIXME
+   $self->n2(0 + $self->readline); # example FIXME
    return $self;
 }
 
 sub run_intro ($self) {
    $self->log(intro => "TESTING: $TESTING");
-   return; # return is printed out!
+   return; # return is printed out
 }
 
 sub parse_turn ($self) {
-   $self->round(MyRound->read_new($self));
+   my $r = MyRound->new(fh => $self->fh, log_types => $self->log_types);
+   $self->round($r->read($self->n1, $self->n2)); # FIXME
    return $self;
 }
 
 sub run_turn ($self) {
    my @answer_lines = ('hello', 'world');
-   return @answer_lines; # return is printed out!
+   return @answer_lines; # return is printed out
 }
 
 MyBot->run unless caller;
