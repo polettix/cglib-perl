@@ -131,6 +131,29 @@ sub run {
    }
 }
 
+package BestItem;
+use strict;
+use experimental qw< signatures postderef >;
+no warnings qw< experimental::signatures experimental::postderef >;
+
+sub collector (%a) {
+   my ($op, $eval, $bv, @bs) = ($a{op} // '>', $a{evaluator} // undef);
+   state $tmpl = <<'END';
+      sub ($item = undef, $value = undef) {
+         return ($bv, @bs) unless @_;
+         $value = $eval->($item) if !defined($value) && defined($eval);
+         if (!defined($bv) || $value __OPERATOR__ $bv) {
+            ($bv, @bs) = ($value, $item);
+         }
+         elsif ($value == $bv) {
+            push @bs, $item;
+         }
+         return;
+      };
+END
+   return eval($tmpl =~ s{__OPERATOR__}{$op}gmxsr) || die $@;
+}
+
 ########################################################################
 ## SPECIFIC BOT STUFF BELOW HERE
 ########################################################################
