@@ -154,6 +154,8 @@ END
    return eval($tmpl =~ s{__OPERATOR__}{$op}gmxsr) || die $@;
 }
 
+sub collect { my $c = collector(shift->%*); $c->($_) for @_; $c->() }
+
 ########################################################################
 ## SPECIFIC BOT STUFF BELOW HERE
 ########################################################################
