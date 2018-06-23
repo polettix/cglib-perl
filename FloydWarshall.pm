@@ -30,7 +30,7 @@ sub floyd_warshall {
          for my $vw (@vs) {
             next if (!exists $d{$vi}{$vw}) || (exists($d{$vv}{$vw})
                && ($d{$vv}{$vw} <= $d{$vv}{$vi} + $d{$vi}{$vw}));
-            $d{$vv}{$vw} = $d{$vv}{$vi} + $d{$vi}{$vw}; 
+            $d{$vv}{$vw} = $d{$vv}{$vi} + $d{$vi}{$vw};
             $p{$vv}{$vw} = $p{$vi}{$vw};
          }
          return if $d{$vv}{$vv} < 0; # negative cycle, bail out
