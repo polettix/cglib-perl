@@ -1,6 +1,9 @@
 #!/usr/bin/env perl
 # vim: ts=3 sts=3 sw=3 et ai nowrap :
 use 5.024001;
+use warnings;
+use experimental qw< signatures postderef >;
+no warnings qw< experimental::signatures experimental::postderef >;
 
 # GLOBAL variables (overridable in testing)
 our $SHARED_LOG_TYPES = { # any category is printed by default
@@ -29,15 +32,21 @@ END
 }
 
 package Base;
-use strict;
 use Storable ();
 use EMo 'default';
-use experimental qw< signatures postderef >;
 no warnings qw< experimental::signatures experimental::postderef >;
 
 has fh        => (default => $SHARED_FH);
 has log_types => (default => $SHARED_LOG_TYPES);
 has hash_remove => (default => [qw< fh log_types hash_remove >]);
+
+sub new_like ($package, $other) {
+   return $package->new(
+      fh          => $other->fh,
+      log_types   => $other->log_types,
+      hash_remove => [$other->hash_remove->@*],
+   );
+}
 
 sub clone ($src) {
    my $dest = ref($src)->new($src->hashref->%*);
@@ -93,15 +102,14 @@ sub set_input ($self, $input) {
 }
 
 package Bot;
-use strict;
-use EMo qw< default >;
+use EMo 'default';
+no warnings qw< experimental::signatures experimental::postderef >;
 
 extends 'Base';
 
 has turn   => (default => 0);
 
-sub run {
-   my ($self, %args) = @_;
+sub run ($self, %args) {
    $self = ($args{class} || $self)->new(%args) unless ref $self;
 
    if ($self->can('parse_intro')) {
@@ -132,8 +140,6 @@ sub run {
 }
 
 package BestItem;
-use strict;
-use experimental qw< signatures postderef >;
 no warnings qw< experimental::signatures experimental::postderef >;
 
 sub collector (%a) {
@@ -161,10 +167,7 @@ sub collect { my $c = collector(shift->%*); $c->($_) for @_; $c->() }
 ########################################################################
 
 package MyRound;
-use strict;
-use warnings;
 use EMo ''; # build default builder coerce is required option chain
-use experimental qw< signatures postderef >;
 no warnings qw< experimental::signatures experimental::postderef >;
 
 extends 'Base'; # logging, reading
@@ -172,12 +175,9 @@ extends 'Base'; # logging, reading
 has $_ for qw< foo bar >; # your round members
 
 # EXAMPLE round reading
-sub read ($package, $n1, $n2) { # FIXME
-   my $self = (ref($package) || $package)->new; # default log & read
-
+sub read ($self) { # FIXME
    my $n = 0 + $self->readline;
-   $self->parse_foo($self->readchomplines($n1 + $n));
-   $self->parse_bar($self->readchomplines($n2));
+   $self->parse_foo($self->readchomplines($n));
    # ...
 
    return $self;
@@ -206,8 +206,7 @@ sub run_intro ($self) {
 }
 
 sub parse_turn ($self) {
-   my $r = MyRound->new(fh => $self->fh, log_types => $self->log_types);
-   $self->round($r->read($self->n1, $self->n2)); # FIXME
+   $self->round(my $round = MyRound->new_like($self)->read);
    return $self;
 }
 
