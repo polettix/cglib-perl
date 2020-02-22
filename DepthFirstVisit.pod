@@ -1,0 +1,180 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+DepthFirstVisit - Depth First Visit algorithm
+
+=head1 SYNOPSIS
+
+   use DepthFirstVisit qw< depth_first_visit >;
+
+   # TL;DR - pre/post/skip take ($node, $parent) as arguments
+   my @retval = depth_first_visit(
+      identifier  => \&id,      # O, subref, takes node, returns id of node (*)
+      post_action => \&post,    # O, subref, action "after" considering node
+      pre_action  => \&pre,     # O, subref, action "before" considering node
+      skip_action => \&skip,    # O, subref, action on skipping duplicate (**)
+      start       => $whatever, # M, whatever scalar you find meaningful
+      successors  => \&succs,   # M, subref, takes node, returns adj'ts (***)
+   );
+   my $retval = depth_first_visit(...); # array ref returned
+   # (*) by default, it's the stringification of the input node
+   # (**) during traversal, already visited node are "skipped" and this action
+   #      is fired in case it is defined
+   # (***) this actually encodes the structure of the graph
+   # return value is list of all nodes reached in the visit, in no order
+
+   # a more elaborate example
+   my %args = (
+
+      # *** MANDATORY PARAMETERS ***
+      start => 'home',
+
+      successors => sub {
+         my %graph = (
+            airport => [qw< work >],
+            home    => [qw< work school >],
+            park    => [qw< school >],
+            school  => [qw< park home >],
+            work    => [qw< home airport >],
+         );
+         return @{$graph{$_[0]}};
+      },
+
+      # *** OPTIONAL PARAMETERS ***
+      id => sub { return $_[0] }, # name is already unique
+
+      pre_action => sub {
+         my ($node, $pred) = @_;
+         print {*STDOUT} "just discovered about <$node>";
+         print {*STDOUT} " (coming from <$pred>)" if defined $pred;
+         print {*STDOUT} "\n";
+      },
+
+      post_action => sub {
+         my ($node, $pred) = @_;
+         print {*STDOUT} "say goodbye to <$node>";
+         print {*STDOUT} " (discovered through <$pred>)" if defined $pred;
+         print {*STDOUT} "\n";
+      },
+
+      skip_action => sub {
+         my ($node, $also) = @_;
+         print {*STDOUT} "skipping <$node> (duplicate from <$also>)\n";
+      },
+   );
+
+   my @reachable = depth_first_visit(%args);
+
+
+=head1 DESCRIPTION
+
+Implementation of a generic depth-fist visit of a graph.
+
+As a minimum, a C<start> node has to be provided, as well as a way to get the
+I<successors> of a node. The former can be anything, the latter is a function
+that accepts a node as input and returns a list of nodes that can be reached
+from the input one.
+
+
+Supported parameters:
+
+=over
+
+=item C<id>
+
+B<OPTIONAL sub reference>
+
+An identifier associated to the node. Defaults to the stringification of the
+node. Useful when your nodes are hash references, and different hash references
+(which would stringify differently) actually can represent the same node.
+
+The signature is as follows:
+
+   sub { my ($node) = @_; ...; return $identifier }
+
+=item C<pre_action>
+
+B<OPTIONAL sub reference>
+
+Function called when a node is discovered but before operating on its
+successors.
+
+The signature is as follows:
+
+   sub { my ($node, $parent) = @_; ... }
+
+For the very first node, C<$parent> is set to C<undef>; otherwise, it is set to
+the first node from which the specific C<$node> was discovered.
+
+=item C<post_action>
+
+B<OPTIONAL sub reference>
+
+Function called when done with a node, i.e. after having visited all successors
+first.
+
+The signature is as follows:
+
+   sub { my ($node, $parent) = @_; ... }
+
+For the very first node, C<$parent> is set to C<undef>; otherwise, it is set to
+the first node from which the specific C<$node> was discovered.
+
+
+=item C<skip_action>
+
+B<OPTIONAL sub reference>
+
+Function called when a node is discovered again after the very first time,
+which is ignored by the algorithm to avoid an infinite visit.
+
+The signature is as follows:
+
+   sub { my ($node, $also) = @_; ... }
+
+Parameter C<$also> is set to the parent node where C<$node> is discovered
+again.
+
+=item C<start>
+
+B<MANDATORY opaque data>
+
+A node from where the visit of the graph should begin. It is treated as opaque
+data, within le limits of the identifier function C<id>.
+
+=item C<successors>
+
+B<MANDATORY sub reference>
+
+A function to access the whole graph.
+
+The signature is as follows:
+
+   sub { my ($node) = @_; ...; return @list_of_successors }
+
+It is provided a node as input, and it is supposed to return a list of all
+nodes that can be reached from the input node, in the order that the visit
+should use for a visit.
+
+=back
+
+
+=head1 AUTHOR
+
+Flavio Poletti <flavio [@t] polettix.it>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2017, 2020 by Flavio Poletti <flavio [@t] polettix.it>
+
+This module is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This code is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
