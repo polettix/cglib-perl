@@ -32,7 +32,7 @@ sub new {
    my $self = bless {((@_ && ref($_[0])) ? %{$_[0]} : @_)}, $package;
    $self->{before} ||= sub { $_[0] < $_[1] };
    (my $is, $self->{items}) = ($self->{items} || [], ['-']);
-   $self->insert($_) for @$is;
+   $self->enqueue($_) for @$is;
    return $self;
 } ## end sub new
 
