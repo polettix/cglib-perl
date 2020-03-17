@@ -10,7 +10,6 @@ sub lcm { return ($_[0] / gcd(@_)) * $_[1] }
 sub binomial {
    my ($n, $k, $n_k, $r) = (@_[0, 1], $_[0] - $_[1], $_[0] - $_[0] + 1);
    ($k, $n_k) = ($n_k, $k) if $k > $n_k;
-   $k = $n - $k if $k > $n - $k;
    my @den = (2 .. $k);
    while ($n > $n_k) {
       ($n, my $f) = ($n - 1, $n);
