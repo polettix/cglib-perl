@@ -1,0 +1,149 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+ConstraintSolver - Generic (and crude) solver for constraint programming
+
+=head1 SYNOPSIS
+
+   use ConstraintSolver qw< solve_by_constraints >;
+
+   # TL;DR - all sub refs take a $state as input, except logger
+   my $outcome = solve_by_constraints(
+      constraints => \@cs,   # M, list of sub refs
+      is_done => \&tester,   # M, check if state holds solution
+      search_factory => \&f, # M, create iterator for searches
+      start => $opaque,      # M, initial state for the search
+      logger => \&logf,      # O, takes stage string and state
+   );
+   # $outcome is $opaque if successful, undef otherwise
+
+
+=head1 DESCRIPTION
+
+Basic implementation of a solver by constraints. The heavy lifting is
+done by constraints (checking of solutions, pruning) as well as by the
+`search_factory` (iterate in the search space).
+
+The `start` key provides a way to track the state. It is up to the user
+to decide such data structure.
+
+Constraints are passed in an anonymous array. Each receives the *state*
+(as passed by `start`) and is supposed to throw an exception if the
+constraint is violated, otherwise return the number of pruning actions
+performed.
+
+When constraints cannot prune any more, a search action must be
+triggered. Argument `search_factory` receives the current *state* and is
+expected to return a reference to a sub that allows iterating through a
+layer of the search space. The function handles in-depth search
+automatically, by invoking the `search_factory` when needed at any given
+layer.
+
+The input arguments are provided as key/value pairs, the following keys are
+supported:
+
+=over
+
+=item C<constraints>
+
+B<MANDATORY reference to array>
+   
+A list of constraints, each a sub reference with the following
+signature:
+
+    sub constraint_x {
+      my ($state) = @_;
+      ...
+      die 'nope' if $constraint_is_violated;
+      return $n_prunes;
+    }
+
+Throws an exception when a constraint is violated. Otherwise, returns
+the number of prune actions performed (allowing optimizations).
+
+=item C<is_done>
+
+B<MANDATORY sub reference>
+
+Test if a specific state contains a solution. It has the following
+signature:
+
+   sub test_is_done {
+      my ($state) = @_;
+      ...
+      return $state_contains_a_solution;
+   }
+
+
+=item C<logger>
+
+B<OPTIONAL sub reference>
+
+An optional sub reference that can help logging what's happening. It has
+the following signature:
+
+    sub logger {
+       my ($stage, $state) = @_;
+       ...
+    }
+
+where `$stage` indicates the specific stage at which the logger is
+invoked (`validating`, `pruned`, and `backtrack`).
+
+Note that the `backtrack` is also called at the very first invocation of
+the states iterator function.
+
+=item C<search_factory>
+
+B<MANDATORY sub reference>
+
+A factory function that returns a sub that can be used as an iterator
+through the possible alternatives in a layer of the depth search.
+
+    sub factory {
+       my ($state) = @_;
+       ...
+       return sub {
+          my ($state) = @_;
+          ...
+          return undef if $no_more_possibilities;
+          # otherwise, act on $state to set the next configuration to
+          # try
+          return 1;
+       };
+    }
+
+The returned sub is supposed to return a *true* value when a new
+configuration is set inside `$state`, and a false value if there are no
+more configurations to explore at this depth level.
+
+=item C<start>
+
+B<MANDATORY scalar>
+
+This is treated as an opaque scalar that is supposed to keep track of
+the state. The internals of the data structure are not visible to
+`solve_by_constraints`.
+
+=back
+
+
+=head1 AUTHOR
+
+Flavio Poletti <flavio [@t] polettix.it>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2020 by Flavio Poletti <flavio [@t] polettix.it>
+
+This module is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This code is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
