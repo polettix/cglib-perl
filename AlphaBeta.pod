@@ -11,7 +11,7 @@ AlphaBeta - Alpha-Beta Pruning algorithm
    use AlphaBeta qw< alpha_beta >;
 
    # TL;DR - $value is a number, $moves an array of moves
-   my ($value, $moves) = @alpha_beta(
+   my ($value, $moves) = alpha_beta(
       alpha => 15,        # O, number, avoid setting it
       beta  => 3,         # O, number, avoid setting it
       depth => 5,         # M, non-negative integer
