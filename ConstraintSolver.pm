@@ -8,7 +8,7 @@ sub solve_by_constraints {
    my @reqs = qw< constraints is_done search_factory start >;
    exists($args{$_}) || die "missing parameter '$_'" for @reqs;
    my ($constraints, $done, $factory, $state, @stack) = @args{@reqs};
-   my $logger = $args{logger} if defined $args{logger};
+   my $logger = $args{logger} // undef;
    while ('necessary') {
       last if eval {    # eval - constraints might complain loudly...
          $logger->(validating => $state) if $logger;
@@ -18,7 +18,7 @@ sub solve_by_constraints {
             $changed += $_->($state) for @$constraints;
             $logger->(pruned => $state) if $logger;
          } ## end while ($changed != 0)
-         $done->($state) || (push(@st, $factory->($state)) && undef);
+         $done->($state) || (push(@stack, $factory->($state)) && undef);
       };
       $logger->(backtrack => $state) if $logger;
       while (@stack) {
