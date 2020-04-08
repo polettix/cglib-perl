@@ -20,7 +20,7 @@ sub solve_by_constraints {
          } ## end while ($changed != 0)
          $done->($state) || (push(@stack, $factory->($state)) && undef);
       };
-      $logger->(backtrack => $state) if $logger;
+      $logger->(backtrack => $state, $@) if $logger;
       while (@stack) {
          last if $stack[-1]->($state);
          pop @stack;

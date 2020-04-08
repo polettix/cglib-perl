@@ -16,7 +16,7 @@ ConstraintSolver - Generic (and crude) solver for constraint programming
       is_done => \&tester,   # M, check if state holds solution
       search_factory => \&f, # M, create iterator for searches
       start => $opaque,      # M, initial state for the search
-      logger => \&logf,      # O, takes stage string and state
+      logger => \&logf,      # O, takes stage, state and exception (opt)
    );
    # $outcome is $opaque if successful, undef otherwise
 
@@ -86,15 +86,20 @@ An optional sub reference that can help logging what's happening. It has
 the following signature:
 
     sub logger {
-       my ($stage, $state) = @_;
+       my ($stage, $state, [$exception]) = @_;
        ...
     }
 
 where `$stage` indicates the specific stage at which the logger is
 invoked (`validating`, `pruned`, and `backtrack`).
 
-Note that the `backtrack` is also called at the very first invocation of
-the states iterator function.
+When called with `$stage` set to `backtrack`, the additional parameter
+`$exception` is passed too, containing the latest value of variable
+`$@`. This should help assessing whether it's a real *backtracking*
+operation (in which case `$exception` would contain an exception) or
+just the first iteration of a search (in which case `$exception` would
+be *false*).
+
 
 =item C<search_factory>
 
