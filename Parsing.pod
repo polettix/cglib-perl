@@ -1,0 +1,151 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+Parsing - Basic parsing facilities
+
+=head1 SYNOPSIS
+
+   use Parsing qw< :all >;
+   use Data::Dumper;
+
+   print Dumper parse('A && B || what || ever && you');
+
+   sub parse { return pf_PARSE(expression())->(@_) }
+
+   sub expression { # and_expression ('||' and_expression)*
+      my $matcher = pf_list(and_expression(), pf_regexp(qr{\s*(\|\|)\s*}));
+      return sub {
+         my $match = $matcher->(@_) or return;
+         return ['OR', @$match];
+      };
+   }
+
+   sub and_expression { # term ('&&' term)*
+      my $matcher = pf_sequence(  # using alternative parsing way...
+         term(),
+         pf_repeated(pf_sequence(ignore_ws('&&'), term())),
+      );
+      return sub { # rearrange match, if any
+         my $match = $matcher->(@_) or return;
+         return ['AND', $match->[0], map { $_->[1] } @{$match->[1]}];
+      };
+   }
+
+   sub term { return pf_regexp(qr{\s*([a-zA-Z_]\w*)\s*}) }
+
+   sub ignore_ws {
+      my $target = shift;
+      my $matcher = pf_sequence(pf_wso(), $target, pf_wso());
+      return sub {
+         my $match = $matcher->($_[0]) or return;
+         return $match->[1]; # ignore the two whitespace sub-matchers
+      };
+   }
+
+
+
+=head1 DESCRIPTION
+
+This is a basic parsing framework. Parsers are handled as sub references
+that accept a reference to a text (to avoid too much copying and proper
+tracking of regular expressions during parsing). A valid parse function
+returns nothing if not matching, otherwise a reference to an array with
+the result of the parsing (which might be empty, of course).
+
+The following function would return a valid parser (note the usage of the C<cg>
+parameters in the regular expression):
+
+   sub parse_whatever {
+      return sub {
+         ${$_[0]} =~ m{\G \s* whatever \s*}cgmxs;
+         return ['whatevah!']
+      };
+   }
+
+This is usually not needed, as the matching part can normally be addressed
+using the primitives of the framework. For example, the function above would
+become:
+
+   sub parse_whatever { return pf_regexp(qr{\s* whatever \s*}) }
+
+The following facilities are available, which should cover most needs for
+a recursive-descent parser:
+
+=over
+
+=item C< pf_alternatives(@alternatives) >
+
+compose parsers passed as C<@alternatives> into an alternattion like:
+
+   first | second | third | ... | last
+
+The first matching alternative is returned.
+
+=item C< pf_exact($string, @retval) >
+
+match an exact C<$string>. Array C<@retval> can be used to return a specific
+value, the C<$string> is returned instead.
+
+
+=item C< pf_list($item_matcher, $sep_matcher, $sep_as_last) >
+
+match a list if items (each matched by C<$item_matcher>, optionally separated
+by C<$sep_matcher>. The list can end with a separator if C<$sep_as_list> is
+true. Returns only the items, ditching the separators.
+
+=item C< pf_PARSE($matcher) >
+
+wraps the provided C<$matcher> to ensure that the whole input is matched. The
+returned sub reference accepts both a reference to a string and a string.
+
+=item C< pf_regexp($rx, @retval) >
+
+match against a regular expression. If C<@retval> is provided, it is
+returned when the match succeeds, otherwise the match result is returned
+(usually a capture in the regular expression).
+
+=item C< pf_repeated($matcher, $min = 0, $max = -1) >
+
+This implements all repetitions of an input C<$matcher>. C<$min>
+represents a minimum number that the match must succeed; C<$max> is an
+upper limit to the match attempts. If C<$max> is set to a negative number,
+then there is no upper limit.
+
+By default it implements the star operator C<*> (i.e. C<$min> is set to
+0 and C<$max> is set to -1). It can also implement the C<+> operator (sets
+C<$min> to 1), as well as the C<?> operator (sets C<$max> to 1) and the
+generic braces operator (set C<$min> and C<$max> to the needed values).
+
+=item C< pf_sequence(@items) >
+
+This matches an exact sequence of C<@items>.
+
+=item C< pf_ws() >
+
+=item C< pf_wso() >
+
+These two functions match mandatory (C<pf_ws>) and optional (C<pf_wso>)
+whitespace (in the Perl sense).
+
+=back
+
+
+=head1 AUTHOR
+
+Flavio Poletti <flavio [@t] polettix.it>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2020 by Flavio Poletti <flavio [@t] polettix.it>
+
+This module is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This code is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
