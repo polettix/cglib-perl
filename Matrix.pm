@@ -16,7 +16,10 @@ sub Mify { return bless $_[0], __PACKAGE__ }
 sub O { return M((0) x ($_[0] * $_[1] || $_[0]), $_[1] || $_[0]) }
 sub n_columns { return $_[0][-1] }
 sub n_rows { return $#{$_[0]} / $_[0][-1] }
-sub stringify;    # see below
+sub row_echelon; # see below
+sub stringify; # see below
+sub swap_columns; # see below
+sub swap_rows; # see below
 sub T; # see below
 sub v { my $i = idx(@_); @_ > 3 ? ($_[0][$i] = $_[3]) : $_[0][$i] }
 
