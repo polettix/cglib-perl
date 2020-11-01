@@ -60,8 +60,8 @@ sub pf_PARSE {
 sub pf_regexp {
    my ($rx, @forced_retval) = @_;
    return sub {
-      my (undef, $retval) = ${$_[0]} =~ m{\G()$rx}cgmxs or return;
-      return scalar(@forced_retval) ? [@forced_retval] : [$retval];
+      scalar(${$_[0]} =~ m{\G()$rx}cgmxs) or return;
+      return scalar(@forced_retval) ? [@forced_retval] : [$2];
    };
 }
 
