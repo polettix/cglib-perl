@@ -96,6 +96,12 @@ match a list if items (each matched by C<$item_matcher>, optionally separated
 by C<$sep_matcher>. The list can end with a separator if C<$sep_as_list> is
 true. Returns only the items, ditching the separators.
 
+
+=item C< sub pf_match_and_filter($matcher, $filter) >
+
+match the C<$matcher> and do a plain C<return> if it is not successful.
+Otherwise, return the output of C<$filter->($result)>.
+
 =item C< pf_PARSE($matcher) >
 
 wraps the provided C<$matcher> to ensure that the whole input is matched. The

@@ -35,6 +35,14 @@ sub pf_list {
    };
 }
 
+sub pf_match_and_filter {
+   my ($matcher, $filter) = @_;
+   return sub {
+      my $match = $matcher->($_[0]) or return;
+      return $filter->($match);
+   };
+} ## end sub match_and_filter
+
 sub pf_PARSE {
    my ($expression) = @_;
    return sub {
