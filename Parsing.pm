@@ -41,7 +41,7 @@ sub pf_match_and_filter {
       my $match = $matcher->($_[0]) or return;
       return $filter->($match);
    };
-} ## end sub match_and_filter
+}
 
 sub pf_PARSE {
    my ($expression) = @_;
