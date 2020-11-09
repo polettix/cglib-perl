@@ -1,0 +1,254 @@
+=pod
+
+=encoding utf-8
+
+=head1 NAME
+
+MonteCarloTreeSearch - what you think it is
+
+=head1 SYNOPSIS
+
+   use MonteCarloTreeSearch qw< monte_carlo_tree_searcher >;
+
+   my $searcher = monte_carlo_tree_searcher(
+      move => \&move,     # M, subref, takes state+move, return new state
+      moves_for => \&mvs, # M, subref, takes state, return list of move/players
+      selection_score => \&ssc, # O, subref, takes N, Ni, Si (*)
+      state => $whatever, # M, whatever scalar you find meaningful
+      study_amount => $amount,   # O, either XXs (seconds), or #NN (times)
+      winners => \&wnrs, # M, subref, takes state, returns win array/undef
+   );
+   # N: # of runs in parent; Ni: # of runs in node; Si: score in node
+
+   $searcher->study_for('#1000'); # # of iterations
+   $searcher->study_for('0.05s'); # amount of time in seconds
+   $searcher->study_cycle while still_have_time(); # externally controlled
+   my $best_move = $searcher->best_move;
+
+   # a more elaborate example
+   my $tic_tac_toe_searcher = monte_carlo_tree_searcher(
+
+      # *** MANDATORY PARAMETERS ***
+      state => { last_player => 'O', next_player => 'X', field => [('.') x 9] },
+
+      moves_for => sub { # return move/player pairs possible in state $_[0]
+         my ($p, $f) = @{$_[0]}{qw< next_player field >};
+         return map { [$_, $p] } grep { $f->[$_] eq '.' } 0 .. 8;
+      },
+
+      move => sub ($state, $move) { # apply move to state, returns copy
+         my @field = @{$state->{field}}; # brand new copy of the field
+         $field[$move] = $state->{next_player};
+         return {
+            last_player => $state->{next_player},
+            next_player => $state->{last_player},
+            field => \@field,
+         };
+      },
+
+      winners => sub ($state) { # check who won, if any
+         state $paths = [
+            [0, 1], [3, 1], [6, 1], # rows
+            [0, 3], [1, 3], [2, 3], # cols
+            [0, 4], [2, 2],         # diags
+         ];
+         my ($field, $X, $O) = ($state->{field}, 0, 0);
+         my $full = 1;
+         for my $p ($paths->@*) {
+            my ($pos, $delta) = $p->@*;
+            my ($x, $o) = (0, 0);
+            for (1 .. 3) {
+               $x++ if $field->[$pos] eq 'X';
+               $o++ if $field->[$pos] eq 'O';
+               $full = 0 if $field->[$pos] eq '.';
+               $pos += $delta;
+            }
+            $X++ if $x == 3;
+            $O++ if $o == 3;
+         }
+         return $X > $O ? ['X'] : $X < $O ? ['O'] : $full ? [qw< X O >] : undef;
+      },
+
+      # *** OPTIONAL PARAMETERS ***
+      random_move_for => sub { # get a random move out of the avilable ones
+         my ($state) = @_;
+         my $id = int(rand 9);
+         for (0 .. 8) {
+            return $id if $state->{field}[$id] eq '.';
+            $id = ($id + 1) % 9;
+         }
+         return; # should never get here!
+      },
+
+      selection_score => sub {
+         my ($pNi, $nNi, $nSi) = @_;
+         return ($nSi / $nNi) + sqrt(2 * log($pNi) / $nNi);
+
+      },
+   );
+   # rest of usage as above...
+
+
+=head1 DESCRIPTION
+
+Implementation of the L<Monte Carlo tree
+search|https://en.wikipedia.org/wiki/Monte_Carlo_tree_search> algorithm.
+There are a few functions that can come handy, depending on your search
+needs:
+
+=over
+
+=item B<< monte_carlo_tree_search >>
+
+a single entry point to do the search and provide a result in one single
+sweep. Defaults to searching for about 70 milliseconds, but this an be
+adjusted with parameter C<study_amount>. Other than this, it takes the
+same parameters as L</monte_carlo_tree_searcher> below.
+
+=item B<< monte_carlo_tree_searcher >>
+
+an object-oriented interface, returns an instance that allows performing
+single *rounds* of search, so that it's possible to control the amount of
+time devoted to the search.
+
+=back
+
+The input arguments for the two entry points are provided as key/value
+pairs, the following keys are supported:
+
+=over
+
+=item C<move>
+
+B<MANDATORY sub reference>
+
+Function to update a state applying a move. It has the following signature and
+returns the new state.
+
+   sub { my ($state, $move) = @_; ... }
+
+B<NOTE>: there is no "rollback" of a move, so it's adviseable to provide
+a copy of the initial state.
+
+=item C<moves_for>
+
+B<MANDATORY sub reference>
+
+Calculate all possible moves from provided state. It has the following signature
+and returns a list of moves:
+
+   sub { my ($state) = @_; ... }
+
+=item C<random_move_for>
+
+B<OPTIONAL sub reference>
+
+Get one single move, hopefully random. The move is treated as opaque data
+and can be a reference to a complext data structure. Defaults to a sub
+that takes all possible moves and takes one at random.
+
+=item C<selection_score>
+
+B<OPTIONAL sub reference>
+
+Calculate the score for selecting a node during the I<selection> phase.
+Defaults to UCB1. It has the following signature:
+
+   sub { my ($pNi, $nNi, $nSi) = @_; ... }
+
+where C<$pNi> is the number of simulations performed at the parent level
+of the specific node, C<$nNi> is the number of simulations performed for
+the specific node, and C<nSi> is the current score for the specific node.
+
+=item C<state>
+
+B<MANDATORY>
+
+The initial state of the search. It is completely opaque, as long of
+course as the other provided manipulation functions know how to deal with
+it. So yes, it might be a hash reference, an integer value, a URI...
+basically whatever fits in a scalar.
+
+=item C<study_amount>
+
+B<OPTIONAL>, only in L</monte_carlo_tree_search>.
+
+Set the amount of I<study> to perform before ending the search and
+returning a result. This applies to L</monte_carlo_tree_search> and is
+ignored in the object-oriented interface.
+
+=back
+
+
+The object-oriented interface provides the following methods:
+
+=over
+
+=item C<< best_move >>
+
+   my $move = $searcher->best_move;
+   my ($move, $player) = $searcher->best_move;
+
+returns the current I<best> move after the study cycles so far. In scalar
+context, it returns the move only; in list context, it returns both the
+move and the player that has to perform the move.
+
+=item C<< study_cycle >>
+
+   $searcher->study_cycle;
+
+perform one single cycle of I<study>, i.e. a single round of
+selection/expansion/simulation/backpropagation. This provides the finest
+granularity for controlling the amount of simulation externally.
+
+=item C<< study_for >>
+
+   $searcher->study_for($amount);
+
+cycle L</study_cycle> according to the provided C<$amount>. This is
+a string with either of the following formats:
+
+=over
+
+=item *
+
+C<< <XXX>s >> specify the amount in seconds, possibly with decimals;
+
+=item *
+
+C<< #<NNN> >> specify the number of iterations to perform.
+
+=back
+
+=back
+
+A typical usage of the object-oriented interface would be:
+
+   # get one instance
+   my $searcher = monte_carlo_tree_searcher(...);
+
+   # perform some study, depending on the needed granularity
+   $searcher->study_for('#100'); # do 100 simulations
+   $searcher->study_for('1.5s'); # do an additional 1.5 seconds
+   $searcher->study_cycle while stil_has_time();
+
+   # get the best move so far
+   my $move = $searcher->best_move;
+
+
+=head1 AUTHOR
+
+Flavio Poletti <flavio [@t] polettix.it>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2020 by Flavio Poletti <flavio [@t] polettix.it>
+
+This module is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This code is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
