@@ -1,0 +1,110 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+PriorityQueue - Heap-based Priority Queue
+
+=head1 SYNOPSIS
+
+   use PriorityQueue;
+
+   my $pq = PriorityQueue->new(
+      before => \&compare, # O, boolean, true if $_[0] comes before $_[1]
+      id_of => \&idsub,    # O, string, gives identifier for an element
+      items => [$this, $and, $that], # O, initial elements in the queue
+   );
+
+   my $min_pq = PriorityQueue->new;
+   my $max_pq = PriorityQueue->new(before => sub {$_[0] > $_[1]});
+
+   $pq->enqueue($_) for ($some, $new, $element);
+   my $next = $pq->dequeue;
+   do_something($pq->dequeue) while ! $pq->is_empty;
+   do_something($pq->dequeue) while $pq->size;
+
+   # take a peek
+   my $next_but_left = $pq->top;
+
+   # id-based expansion
+   my $element_id = $pq->top_id;
+   my $element;
+   $element = $pq->item_of($element_id) if $pq->contains_id($element_id);
+   print "have it\n" if $pq->contains($element);
+   $pq->remove_id($element_id);
+   $pq->remove($element) if $pq->contains($element);
+
+
+=head1 DESCRIPTION
+
+B<< Adapted from L<https://algs4.cs.princeton.edu/24pq/> >>
+
+This is a Priority Queue implementation that can support:
+
+=over
+
+=item *
+
+Integers Min Priority Queues - this is the default
+
+=item *
+
+Min and Max Priority Queues with whatever elements - you just provide a sub
+reference C<before> to tell who should come out first between two elements.
+Example:
+
+   my @elements = (
+      { size => 10, name => 'medium' },
+      { size => 20, name => 'big' },
+      { size => 5,  name => 'small' },
+   );
+
+   my $min_pq = PriorityQueue->new(
+      before => sub { $_[0]{size} < $_[1]{size} },
+   );
+
+   my $max_pq = PriorityQueue->new(
+      before => sub { $_[0]{size} > $_[1]{size} },
+   );
+
+=item *
+
+Indexed Min and Max Priority Queues with whatever elements - in addition to the
+C<before> sub, you also provide a C<id_of> sub to return the identifier of an
+element. By default it just stringifies the element itself.  Example:
+
+   my @elements = (
+      { size => 10, name => 'medium' },
+      { size => 20, name => 'big' },
+      { size => 5,  name => 'small' },
+   );
+
+   my $min_pq = PriorityQueue->new(
+      before => sub { $_[0]{size} < $_[1]{size} },
+      id_of  => sub { $_[0]{name} },
+   );
+
+   my $max_pq = PriorityQueue->new(
+      before => sub { $_[0]{size} > $_[1]{size} },
+      id_of  => sub { $_[0]{name} },
+   );
+
+=back
+
+=head1 AUTHOR
+
+Flavio Poletti <flavio [@t] polettix.it>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2020 by Flavio Poletti <flavio [@t] polettix.it>
+
+This module is free software. You can redistribute it and/or modify it
+under the terms of the Artistic License 2.0.
+
+This code is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
+=cut
