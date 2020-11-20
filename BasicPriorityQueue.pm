@@ -3,7 +3,7 @@ use strict;     # Adapted from https://algs4.cs.princeton.edu/24pq/
 sub dequeue;    # see below
 sub enqueue;    # see below
 sub is_empty { return !$#{$_[0]{items}} }
-sub max { return $#{$_[0]{items}} ? $_[0][1] : () }
+sub max { return $#{$_[0]{items}} ? $_[0]{items}[1] : () }
 sub new;        # see below
 sub size { return $#{$_[0]{items}} }
 
