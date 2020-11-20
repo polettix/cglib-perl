@@ -83,11 +83,13 @@ element. By default it just stringifies the element itself.  Example:
    my $min_pq = PriorityQueue->new(
       before => sub { $_[0]{size} < $_[1]{size} },
       id_of  => sub { $_[0]{name} },
+      items  => \@elements,
    );
 
    my $max_pq = PriorityQueue->new(
       before => sub { $_[0]{size} > $_[1]{size} },
       id_of  => sub { $_[0]{name} },
+      items  => \@elements,
    );
 
 =back
