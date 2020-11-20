@@ -1,5 +1,28 @@
 package BasicPriorityQueue;
 use strict;     # Adapted from https://algs4.cs.princeton.edu/24pq/
+
+=pod
+
+=encoding utf-8
+
+=head1 SYNOPSIS
+
+   use BasicPriorityQueue;
+
+   # All arguments are optional
+   my $pq = BasicPriorityQueue->(
+      before => \&compare, # true if $_[0] comes before $_[1]
+      items  => \@list,    # initial values for queue
+   );
+
+   my $first_item = $pq->dequeue; # get and remove "top" item from queue
+   my $peek_item  = $pq->top;     # get "top" item but keep in queue
+   $pq->enqueue($new_item);
+   do_something($pq->dequeue) while ! $pq->is_empty;
+   do_something($pq->dequeue) while $pq->size;
+
+=cut
+
 sub dequeue;    # see below
 sub enqueue;    # see below
 sub is_empty    { return !$#{$_[0]{items}} }
