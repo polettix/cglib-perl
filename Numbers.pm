@@ -1,7 +1,9 @@
 package Numbers;
 use strict;
 use Exporter qw< import >;
-our @EXPORT_OK = qw< binomial binomial_bi factorial factorial_bi
+our @EXPORT_OK = qw< binomial binomial_bi
+   chinese_remainder_theorem chinese_remainder_theorem_bi
+   factorial factorial_bi
    gcd egcd factor is_prime lcm >;
 
 sub gcd { my ($A, $B) = @_; ($A, $B) = ($B % $A, $A) while $A; return $B }
@@ -26,6 +28,30 @@ sub binomial {
 sub binomial_bi {
    require Math::BigInt;
    return binomial(Math::BigInt->new($_[0]), $_[1]);
+}
+
+# provide a list of reminder1, modulus1, reminder2, modulus2, ...
+sub chinese_remainder_theorem {
+   die "no inputs" unless scalar @_;
+   die "need an even number of inputs" if scalar(@_) % 2 == 1;
+   my ($N, $R) = splice @_, 0, 2;
+   while (@_) {
+      my ($n, $r) = splice @_, 0, 2;
+      my ($gcd, $x, $y) = egcd($N, $n);
+      if ($gcd != 1) {
+         die "cannot combine: {x ~ $R (mod $N)} with {$x ~ $r (mod $n)}"
+            unless ($R % $gcd) == ($r % $gcd);
+         $_ /= $gcd for ($N, $n);
+      }
+      my $P = $N * $n;
+      ($N, $R) = ($P, ($r * $x * $N + $R * $y * $n) % $P);
+   }
+   return ($N, $R);
+}
+
+sub chinese_remainder_theorem_bi {
+   require Math::BigInt;
+   return chinese_remainder_theorem(map { Math::BigInt->new($_) } @_);
 }
 
 sub egcd {    # https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
