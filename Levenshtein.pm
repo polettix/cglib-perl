@@ -4,7 +4,7 @@ use Exporter qw< import >;
 our @EXPORT_OK = qw< levenshtein >;
 
 # Wikipedia: .../Levenshtein_distance#Iterative_with_two_matrix_rows
-sub levenshtein ($s, $t) {
+sub levenshtein {
    my ($v, $s, $t) = ([0 .. length($_[0])], @_);
    for my $i (1 .. length($t)) {
       my $w = [$i];              # first "column" of full matrix
