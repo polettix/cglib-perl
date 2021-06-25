@@ -1,6 +1,5 @@
 package FloydWarshall; # https://algs4.cs.princeton.edu/code/ ...
 use strict;
-use PriorityQueue;
 use Exporter qw< import >;
 our @EXPORT_OK = qw< floyd_warshall >;
 
