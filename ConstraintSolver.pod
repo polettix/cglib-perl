@@ -25,21 +25,21 @@ ConstraintSolver - Generic (and crude) solver for constraint programming
 
 Basic implementation of a solver by constraints. The heavy lifting is
 done by constraints (checking of solutions, pruning) as well as by the
-`search_factory` (iterate in the search space).
+C<search_factory> (iterate in the search space).
 
-The `start` key provides a way to track the state. It is up to the user
+The C<start> key provides a way to track the state. It is up to the user
 to decide such data structure.
 
-Constraints are passed in an anonymous array. Each receives the *state*
-(as passed by `start`) and is supposed to throw an exception if the
+Constraints are passed in an anonymous array. Each receives the I<state>
+(as passed by C<start>) and is supposed to throw an exception if the
 constraint is violated, otherwise return the number of pruning actions
 performed.
 
 When constraints cannot prune any more, a search action must be
-triggered. Argument `search_factory` receives the current *state* and is
+triggered. Argument C<search_factory> receives the current I<state> and is
 expected to return a reference to a sub that allows iterating through a
 layer of the search space. The function handles in-depth search
-automatically, by invoking the `search_factory` when needed at any given
+automatically, by invoking the C<search_factory> when needed at any given
 layer.
 
 The input arguments are provided as key/value pairs, the following keys are
@@ -90,15 +90,15 @@ the following signature:
        ...
     }
 
-where `$stage` indicates the specific stage at which the logger is
-invoked (`validating`, `pruned`, and `backtrack`).
+where C<$stage> indicates the specific stage at which the logger is
+invoked (C<validating>, C<pruned>, and C<backtrack>).
 
-When called with `$stage` set to `backtrack`, the additional parameter
-`$exception` is passed too, containing the latest value of variable
-`$@`. This should help assessing whether it's a real *backtracking*
-operation (in which case `$exception` would contain an exception) or
-just the first iteration of a search (in which case `$exception` would
-be *false*).
+When called with C<$stage> set to C<backtrack>, the additional parameter
+C<$exception> is passed too, containing the latest value of variable
+C<$@>. This should help assessing whether it's a real I<backtracking>
+operation (in which case C<$exception> would contain an exception) or
+just the first iteration of a search (in which case C<$exception> would
+be I<false>).
 
 
 =item C<search_factory>
@@ -121,8 +121,8 @@ through the possible alternatives in a layer of the depth search.
        };
     }
 
-The returned sub is supposed to return a *true* value when a new
-configuration is set inside `$state`, and a false value if there are no
+The returned sub is supposed to return a I<true> value when a new
+configuration is set inside C<$state>, and a false value if there are no
 more configurations to explore at this depth level.
 
 =item C<start>
@@ -131,7 +131,7 @@ B<MANDATORY scalar>
 
 This is treated as an opaque scalar that is supposed to keep track of
 the state. The internals of the data structure are not visible to
-`solve_by_constraints`.
+C<solve_by_constraints>.
 
 =back
 
