@@ -28,7 +28,7 @@ sub new {
 sub enqueue {    # insert + update in one... DWIM
    my ($is, $id) = ($_[0]{items}, $_[0]{id_of}->($_[1]));
    $_[0]{item_of}{$id} = $_[1];    # keep track of this item
-   my $k = $_[0]{pos_of}{$id} ||= do { push @$is, $_[1]; $#$is };
+   $is->[my $k = $_[0]{pos_of}{$id} ||= $#$is + 1] = $_[1];
    $_[0]->_adjust($k);
    return $id;
 } ## end sub enqueue
