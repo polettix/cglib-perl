@@ -80,7 +80,7 @@ distance. Leverages C<PriorityQueue> for efficiency in node selection.
       my $thr = $self->{t}{$vid} || return;    # connected?
 
       my @retval;
-      while ($v) {
+      while (defined $v) {
          unshift @retval, $v;
          ($v, $vid) = @{$thr}{qw< p pid >};
          $thr = $self->{t}{$vid};
