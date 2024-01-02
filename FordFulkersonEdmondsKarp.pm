@@ -58,17 +58,18 @@ sub ford_fulkerson_edmonds_karp {
       }
    }
 
-   my (%flag, @min_cut) = ($s => 1); # min-cut finding
-   @q = ($s);
+   my %reach = ((@q = $s) => 1); # tracks vertices still reachable from src
    while (@q) {
-      push @min_cut, (my $l = shift @q);
+      my $l = shift @q;
       for my $n (keys %{$ef{$l} || {}}) {
-         next if $flag{$n}++;
-         next if ($ef{$l}{$n}{c} - $ef{$l}{$n}{f}) < ACC;
+         next if (($ef{$l}{$n}{c} - $ef{$l}{$n}{f}) < ACC) || $reach{$n}++;
          push @q, $n;
       }
    }
-   @min_cut = map {$nf{$_}} @min_cut;
+   my @min_cut = map { # edges between reachable and unreachable vertices
+      my ($nl, @neighbors) = ($nf{$_}, keys %{$ef{$_} || {}});
+      map { [$nl, $nf{$_}] } grep { !$reach{$_} } @neighbors;
+   } keys %reach;
 
    return {
       max_flow => $max_flow,
