@@ -9,18 +9,19 @@ sub ford_fulkerson_edmonds_karp {
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
    my @reqs = qw< capacity successors source target >;
    exists($args{$_}) || die "missing parameter '$_'" for @reqs;
-   my ($cap, $scs, $s, $t) = @args{@reqs};
+   my ($cap, $scs, $s, $t, $und) = @args{@reqs, 'undirected'};
    my $id_of = $args{identifier} || sub { return "$_[0]" };
 
    my (@q, %ef, %nf) = ($s); # initialization
    while (@q) {
-      next if $nf{my $vi = $id_of->(my $v = shift @q)};
+      next if exists($nf{my $vi = $id_of->(my $v = shift @q)});
       for my $w ($scs->($nf{$vi} = $v)) {
          next if $vi eq (my $wi = $id_of->($w)); # avoid self-edges
          push @q, $w unless exists $nf{$wi};
          next if exists $ef{$vi}{$wi};
-         $ef{$vi}{$wi} = $ef{$wi}{$vi}
-            = { s => $vi, t => $wi, c => $cap->($v, $w), f => 0 };
+         my $c = $cap->($v, $w);
+         $ef{$vi}{$wi} = { s => $vi, t => $wi, c => $c, f => 0 };
+         $ef{$wi}{$vi} = { s => $wi, t => $vi, c => $c, f => 0 } if $und;
       }
    }
 
