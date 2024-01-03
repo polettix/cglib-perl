@@ -9,7 +9,7 @@ sub ford_fulkerson_edmonds_karp {
    my %args = (@_ && ref($_[0])) ? %{$_[0]} : @_;
    my @reqs = qw< capacity successors source target >;
    exists($args{$_}) || die "missing parameter '$_'" for @reqs;
-   my ($cap, $scs, $s, $t, $und) = @args{@reqs, 'undirected'};
+   my ($cap, $scs, $s, $t, $u) = @args{@reqs, 'undirected'};
    my $id_of = $args{identifier} || sub { return "$_[0]" };
 
    my (@q, %ef, %nf) = ($s); # initialization
@@ -18,10 +18,9 @@ sub ford_fulkerson_edmonds_karp {
       for my $w ($scs->($nf{$vi} = $v)) {
          next if $vi eq (my $wi = $id_of->($w)); # avoid self-edges
          push @q, $w unless exists $nf{$wi};
-         next if exists $ef{$vi}{$wi};
-         my $c = $cap->($v, $w);
-         $ef{$vi}{$wi} = { s => $vi, t => $wi, c => $c, f => 0 };
-         $ef{$wi}{$vi} = { s => $wi, t => $vi, c => $c, f => 0 } if $und;
+         next if exists $ef{$vi}{$wi}; # already added this edge
+         $ef{$vi}{$wi} = $ef{$vi}{$wi}
+            = { s => $vi, t => $wi, c => $cap->($v, $w), f => 0 };
       }
    }
 
@@ -32,8 +31,8 @@ sub ford_fulkerson_edmonds_karp {
          my ($l, @trail) = @{shift @q};
          for my $n (keys %{$ef{$l} || {}}) {
             my ($cap, $flow, $src) = @{$ef{$l}{$n}}{qw< c f s >};
-            next if (($src eq $l) && (($cap - $flow) < ACC))
-               || (($src eq $n) && ($flow < ACC));
+            my $av = $src eq $l ? $cap - $flow : $u ? $flow - $cap : $flow;
+            next if $av < ACC;
             if ($n eq $t) {
                @path = reverse($n, $l, @trail);
                shift @path; # don't need the source node
@@ -47,7 +46,7 @@ sub ford_fulkerson_edmonds_karp {
       my ($l, $bneck) = ($s); # calculate bottleneck capacity
       for (@path) {
          my ($cap, $flow, $src) = @{$ef{$l}{$_}}{qw< c f s >};
-         my $avail = ($src eq $l) ? ($cap - $flow) : $flow;
+         my $avail = $src eq $l ? $cap - $flow : $u ? $flow - $cap : $flow;
          $bneck = $avail if (! defined $bneck) || ($avail < $bneck);
          $l = $_;
       }
@@ -61,8 +60,11 @@ sub ford_fulkerson_edmonds_karp {
    my %reach = ((@q = $s) => 1); # tracks vertices still reachable from src
    while (@q) {
       my $l = shift @q;
-      for my $n (keys %{$ef{$l} || {}}) {
-         next if (($ef{$l}{$n}{c} - $ef{$l}{$n}{f}) < ACC) || $reach{$n}++;
+      my $edges = $ef{$l} or next;
+      for my $n (keys %$edges) {
+         my ($src, $cap, $flow) = @{$edges->{$n}}{qw< s c f >};
+         my $avail = $src eq $l ? $cap - $flow : $u ? $flow - $cap : $flow;
+         next if ($avail < ACC) || $reach{$n}++;
          push @q, $n;
       }
    }
