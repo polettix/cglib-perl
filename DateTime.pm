@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-package Romeo::Util::DateTime;
+package DateTime;
 use v5.24;
 use warnings;
 use experimental 'signatures';
